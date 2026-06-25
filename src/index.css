@@ -1,0 +1,42 @@
+:root {
+  --bg: #0d0d0b;
+  --surface: #161614;
+  --surface2: #1e1e1b;
+  --surface3: #252521;
+  --border: #2a2a26;
+  --red: #c8102e;
+  --red2: #e8192f;
+  --gold: #d4a843;
+  --text: #f0ede6;
+  --text2: #9e9a90;
+  --text3: #5c5a54;
+  --green: #27ae60;
+  --blue: #2471a3;
+  --orange: #e67e22;
+  --danger: #c0392b;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  font-family: 'Syne', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
