@@ -39,12 +39,13 @@ const Dashboard = () => {
     if (s === 'pending') return <span className="badge bo">⏳ En attente</span>;
     if (s === 'validated') return <span className="badge bg">✓ Validée</span>;
     if (s === 'rejected') return <span className="badge br">✗ Rejetée</span>;
+    if (s === 'destroyed' || s === 'détruite') return <span className="badge br">⊘ Détruite</span>;
     return null;
   };
 
   const cStatutBadge = (s) => {
     if (s === 'pending') return <span className="badge bo">⏳ En attente</span>;
-    if (s === 'remis') return <span className="badge bb">📦 Remis</span>;
+    if (s === 'remis') return <span className="badge bb">📦 En attente de retour</span>;
     if (s === 'returned') return <span className="badge br">↩ Retour en attente</span>;
     if (s === 'cloture') return <span className="badge bg">✓ Clôturée</span>;
     return null;

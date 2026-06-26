@@ -186,14 +186,14 @@ const Consultation = () => {
                   <td><span style={{ fontFamily: "'DM Mono',monospace", color: 'var(--gold)', fontSize: '11px' }}>{c.ref}</span></td>
                   <td><span className={`badge ${c.statut === 'pending' ? 'bo' : c.statut === 'remis' ? 'bb' : c.statut === 'returned' ? 'br' : 'bg'}`}>
                     {c.statut === 'pending' ? 'En attente'
-                      : c.statut === 'remis' ? 'Documents remis'
+                      : c.statut === 'remis' ? 'En attente de retour'
                       : c.statut === 'returned' ? 'Retour en attente'
                       : 'Clôturée'}
                   </span></td>
                   <td style={{ fontSize: '10px' }}>{c.boites.map(b => <span key={b.id} className="badge by" style={{ margin: '1px' }}>{b.ref}</span>)}</td>
                   <td style={{ fontSize: '10px', color: 'var(--red)', fontFamily: "'DM Mono',monospace" }}>{fmtDate(c.retour)}</td>
                   <td>
-                    {c.statut === 'remis' && <button className="btn bblue bsm" onClick={() => handleRetour(c)}>↩ Retour</button>}
+                    {c.statut === 'remis' && <button className="btn bblue bsm" onClick={() => handleRetour(c)}>Retour</button>}
                     {c.statut === 'pending' && <span className="badge bo">En attente</span>}
                     {c.statut === 'returned' && <span className="badge bb">Retour en cours de validation</span>}
                     {c.statut === 'cloture' && <span className="badge bg">Clôturée</span>}

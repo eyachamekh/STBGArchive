@@ -82,7 +82,7 @@ const Users = () => {
         {loadError && <div className="login-err" style={{ display: 'block', marginBottom: '12px' }}>{loadError}</div>}
         {currentUser?.role === 'admin' && (
           <div style={{ marginBottom: '12px', color: isAuthenticatedBackend ? '#0f0' : '#f44', fontWeight: 600 }}>
-            {isAuthenticatedBackend ? 'Connexion backend active — réinitialisation possible.' : 'Connexion backend inactive — la réinitialisation est désactivée.'}
+            {/* {isAuthenticatedBackend ? 'Connexion backend active — réinitialisation possible.' : 'Connexion backend inactive — la réinitialisation est désactivée.'} */}
           </div>
         )}
         <table>

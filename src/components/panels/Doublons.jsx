@@ -25,6 +25,7 @@ const Doublons = () => {
     if (s === 'pending') return <span className="badge bo">⏳ En attente</span>;
     if (s === 'validated') return <span className="badge bg">✓ Validée</span>;
     if (s === 'rejected') return <span className="badge br">✗ Rejetée</span>;
+    if (s === 'destroyed' || s === 'détruite') return <span className="badge br">⊘ Détruite</span>;
     return null;
   };
 

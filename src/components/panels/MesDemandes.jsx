@@ -34,6 +34,12 @@ const MesDemandes = () => {
         <span style={{ fontSize: '9px', color: 'var(--red)' }}>{d.motif}</span>
       </>
     );
+    if (d.statut === 'destroyed' || d.statut === 'détruite') return (
+      <>
+        <span className="badge br">⊘ Détruite</span><br />
+        {d.motif ? <span style={{ fontSize: '9px', color: 'var(--text3)' }}>PV: {d.motif}</span> : null}
+      </>
+    );
     return null;
   };
 

@@ -107,18 +107,6 @@ router.put('/:id/status', authenticate, (req, res) => {
     return res.status(400).json({ message: 'Statut requis.' });
   }
 
-  if (statut === 'remis' || statut === 'cloture') {
-    if (role !== 'admin' && role !== 'archiviste') {
-      return res.status(403).json({ message: 'Accès admin requis.' });
-    }
-  }
-
-  if (statut === 'returned') {
-    if (role === 'admin' || role === 'archiviste') {
-      return res.status(403).json({ message: 'Seul le demandeur peut marquer le retour.' });
-    }
-  }
-
   db.query('SELECT * FROM consultations WHERE id = ?', [id], (err, rows) => {
     if (err) {
       console.error('Error fetching consultation:', err);
@@ -130,8 +118,23 @@ router.put('/:id/status', authenticate, (req, res) => {
 
     const consult = parseConsultationRow(rows[0]);
 
-    if (statut === 'returned' && consult.user_id !== String(userId)) {
-      return res.status(403).json({ message: 'Vous ne pouvez pas retourner cette consultation.' });
+    // 1. Administration check (only admin can remise, admin/archiviste can cloture)
+    if (statut === 'remis') {
+      if (role !== 'admin') {
+        return res.status(403).json({ message: 'Accès admin requis pour la remise.' });
+      }
+    }
+    if (statut === 'cloture') {
+      if (role !== 'admin') {
+        return res.status(403).json({ message: 'Accès administration (admin uniquement) requis.' });
+      }
+    }
+
+    // 2. Creator check (only the demandeur who requested the consultation can mark its return)
+    if (statut === 'returned') {
+      if (Number(consult.user_id) !== Number(userId)) {
+        return res.status(403).json({ message: 'Seul le demandeur peut marquer le retour de cette consultation.' });
+      }
     }
 
     const updates = [];

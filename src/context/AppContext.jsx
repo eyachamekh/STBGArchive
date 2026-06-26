@@ -136,7 +136,8 @@ export const AppProvider = ({ children }) => {
 
   async function loadConsultations() {
     // Don't check currentUser here - it might not be set yet during restore
-    if (isAuthenticatedBackend) {
+    const token = localStorage.getItem('token');
+    if (token) {
       try {
         const res = await fetchWithAuth('http://localhost:3000/api/consultations');
         if (res.ok) {
@@ -158,7 +159,7 @@ export const AppProvider = ({ children }) => {
   const mapConsultation = (c) => ({
     id: c.id,
     ref: c.ref,
-    uid: c.user_id || c.uid,
+    uid: c.username || c.uid || c.user_id,
     nom: c.requester || c.nom,
     svc: c.svc || currentUser?.svc,
     motif: c.motif,
@@ -202,7 +203,9 @@ export const AppProvider = ({ children }) => {
       statut: a.statut || 'pending',
       created: new Date(a.created_at).toLocaleDateString('fr-TN'),
       annee: new Date(a.created_at).getFullYear(),
-      motif: a.motif || ''
+      motif: a.motif || '',
+      refDebut: a.ref_debut || (a.boites_details && a.boites_details.length > 0 ? a.boites_details[0].ref_debut : ''),
+      refFin: a.ref_fin || (a.boites_details && a.boites_details.length > 0 ? a.boites_details[0].ref_fin : '')
     };
   };
 

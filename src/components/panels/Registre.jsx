@@ -9,6 +9,7 @@ const Registre = () => {
   const today = new Date();
 
   const isDestroyed = (d) => {
+    if (d.statut === 'destroyed' || d.statut === 'détruite') return false;
     if (!d.destRaw || d.destRaw === '' || d.delai === 'Permanent') return false;
     return new Date(d.destRaw) <= today;
   };
@@ -20,7 +21,7 @@ const Registre = () => {
     d.type.toLowerCase().includes(filter.toLowerCase())
   );
 
-  const list = (showDestroyed ? baseList.filter(isDestroyed) : baseList).slice().reverse();
+  const list = (showDestroyed ? baseList.filter(isDestroyed) : baseList.filter(d => !isDestroyed(d))).slice().reverse();
   const destroyedCount = demandes.filter(isDestroyed).length;
 
   const fmtDate = (s) => {
@@ -34,6 +35,7 @@ const Registre = () => {
     if (s === 'pending') return <span className="badge bo">⏳ En attente</span>;
     if (s === 'validated') return <span className="badge bg">✓ Validée</span>;
     if (s === 'rejected') return <span className="badge br">✗ Rejetée</span>;
+    if (s === 'destroyed' || s === 'détruite') return <span className="badge br">⊘ Détruite</span>;
     return null;
   };
 
@@ -48,18 +50,18 @@ const Registre = () => {
           className={`btn bsm ${showDestroyed ? 'bdanger' : 'bg2'}`}
           onClick={() => setShowDestroyed(v => !v)}
         >
-          ⊘ Détruits{destroyedCount > 0 && <span className="nbadge nb-r" style={{ marginLeft: '6px' }}>{destroyedCount}</span>}
+          ⊘ À détruire{destroyedCount > 0 && <span className="nbadge nb-r" style={{ marginLeft: '6px' }}>{destroyedCount}</span>}
         </button>
       </div>
 
       {showDestroyed && (
-        <div className="al al-r">⊘ Affichage des archives dont la date de destruction est dépassée — {destroyedCount} document(s) concerné(s).</div>
+        <div className="al al-r">⊘ Affichage des archives à détruire — {destroyedCount} document(s) dont la date de destruction est dépassée.</div>
       )}
 
       <div className="tw">
         <div className="twh">
           <div className="twt">
-            {showDestroyed ? 'Archives Détruites / À Détruire' : 'Registre Général des Archives STBG'}
+            {showDestroyed ? 'Archives À Détruire' : 'Registre Général des Archives STBG'}
           </div>
           {showDestroyed && <button className="btn bg2 bsm" onClick={() => setShowDestroyed(false)}>← Tout afficher</button>}
         </div>
@@ -81,11 +83,11 @@ const Registre = () => {
                     <td><span style={{ fontFamily: "'DM Mono',monospace", color: 'var(--gold)', fontSize: '11px' }}>{d.ref}</span></td>
                     <td className="tdm">{d.type}</td>
                     <td>{d.svc}</td>
-                    <td style={{ fontSize: '10px' }}>{fmtDate(d.dd)}<br /><span style={{ color: 'var(--text3)' }}>→{fmtDate(d.df)}</span></td>
+                    <td style={{ fontSize: '10px' }}>{fmtDate(d.dd)}<br /><span style={{ color: 'var(--text3)' }}>à {fmtDate(d.df)}</span></td>
                     <td style={{ fontSize: '10px', fontFamily: "'DM Mono',monospace", maxWidth: '120px' }}>{ri}</td>
                     <td><span className={`badge ${d.delai === 'Permanent' ? 'bb' : 'bo'}`}>{d.delai}</span></td>
                     <td style={{ fontSize: '10px', color: destroyed ? 'var(--red)' : 'var(--text3)', fontFamily: "'DM Mono',monospace", fontWeight: destroyed ? 700 : 400 }}>
-                      {d.destFmt}
+                      {fmtDate(d.destRaw)}
                       {destroyed && <div><span className="badge br" style={{ marginTop: '3px' }}>⊘ Dépassée</span></div>}
                     </td>
                     <td style={{ fontSize: '10px' }}>{d.local}</td>

@@ -1,9 +1,13 @@
-import { useContext, useState } from 'react';
+import { useContext, useState, useEffect } from 'react';
 import { AppContext } from '../../context/AppContext';
 
 const GestionConsultations = () => {
-  const { consultations, updateConsultationStatus } = useContext(AppContext);
-  const [tab, setTab] = useState('pending');
+  const { currentUser, consultations, updateConsultationStatus } = useContext(AppContext);
+  const [tab, setTab] = useState(() => localStorage.getItem('gestionConsultationsTab') || 'pending');
+
+  useEffect(() => {
+    localStorage.setItem('gestionConsultationsTab', tab);
+  }, [tab]);
 
   const [remiseId, setRemiseId] = useState(null);
   const [remiseObs, setRemiseObs] = useState('');
@@ -11,11 +15,12 @@ const GestionConsultations = () => {
   const [retourId, setRetourId] = useState(null);
   const [retourEtat, setRetourEtat] = useState('Bon état');
 
-  const list = consultations.filter(c => c.statut === tab);
+  const list = consultations.filter(c => c.statut === tab && (currentUser?.role === 'admin' || c.uid === currentUser?.id));
   
   const fmtDate = (s) => {
     if (!s || s.length < 8) return s || '—';
-    const p = s.split('-');
+    const datePart = s.includes('T') ? s.split('T')[0] : s;
+    const p = datePart.split('-');
     return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : s;
   };
 
@@ -27,6 +32,15 @@ const GestionConsultations = () => {
   const confirmerRetour = () => {
     updateConsultationStatus(retourId, 'cloture', { retourEtat });
     setRetourId(null);
+  };
+
+  const marquerRemis = (consultationId) => {
+    updateConsultationStatus(consultationId, 'returned', {});
+   setTab('returned');
+  };
+
+  const marquerResolu = (consultationId) => {
+   updateConsultationStatus(consultationId, 'cloture', { retourEtat: 'Bon état' });
   };
 
   const activeConsult = remiseId ? consultations.find(c => c.id === remiseId) : null;
@@ -65,9 +79,32 @@ const GestionConsultations = () => {
                   <td style={{ fontSize: '10px', color: 'var(--red)', fontFamily: "'DM Mono',monospace" }}>{fmtDate(c.retour)}</td>
                   <td style={{ fontSize: '10px', fontFamily: "'DM Mono',monospace" }}>{c.created}</td>
                   <td>
-                    {tab === 'pending' && <button className="btn bgreen bsm" onClick={() => setRemiseId(c.id)}>Remettre</button>}
-                    {tab === 'returned' && <button className="btn bblue bsm" onClick={() => setRetourId(c.id)}>✓ Clôturer</button>}
-                    {(tab === 'remis' || tab === 'cloture') && <span className={`badge ${tab === 'cloture' ? 'bg' : 'bb'}`}>{tab === 'cloture' ? 'Clôturée' : 'En attente de retour'}</span>}
+                    {tab === 'pending' && currentUser?.role === 'admin' && (
+                      <button className="btn bgreen bsm" onClick={() => setRemiseId(c.id)}>Remettre</button>
+                    )}
+                    {tab === 'pending' && currentUser?.role !== 'admin' && (
+                      <span className="badge bo">En attente</span>
+                    )}
+                    {tab === 'returned' && currentUser?.role === 'admin' && (
+                      <button className="btn bblue bsm" onClick={() => setRetourId(c.id)}>✓ Retour</button>
+                    )}
+                    {tab === 'returned' && currentUser?.role !== 'admin' && (
+                      <span className="badge bo">En retour</span>
+                    )}
+                    {tab === 'remis' && currentUser?.role !== 'admin' && (
+                      <button className="btn bb bsm" onClick={() => marquerRemis(c.id)}>Remis</button>
+                    )}
+                    {tab === 'remis' && currentUser?.role === 'admin' && (
+                      <span className="badge bb">En attente de retour</span>
+                    )}
+                    {tab === 'cloture' && (
+                      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                        <span className={`badge ${(c.retourEtat && (c.retourEtat.includes('dégradé') || c.retourEtat.includes('manquants'))) ? 'by' : 'bg'}`}>Clôturée</span>
+                        {c.retourEtat && (c.retourEtat.includes('dégradé') || c.retourEtat.includes('manquants')) && (
+                          <button className="btn by bsm" onClick={() => marquerResolu(c.id)}>✓ OK</button>
+                        )}
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))
@@ -115,7 +152,7 @@ const GestionConsultations = () => {
             </div>
             <div className="mf">
               <button className="btn bg2" onClick={() => setRetourId(null)}>Annuler</button>
-              <button className="btn bgreen" onClick={confirmerRetour}>✓ Clôturer la Consultation</button>
+              <button className="btn bgreen" onClick={confirmerRetour}>✓ Valider le Retour</button>
             </div>
           </div>
         </div>

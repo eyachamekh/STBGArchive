@@ -252,7 +252,8 @@ router.put('/:id', (req, res) => {
     db.query(
       `UPDATE archives 
        SET document_type = ?, date_debut = ?, date_fin = ?, delai_legale = ?, 
-           date_destruction_prevue = ?, boites = ?, local_destination = ?, observations = ?, updated_at = NOW()
+           date_destruction_prevue = ?, boites = ?, local_destination = ?, observations = ?, 
+           statut = 'pending', motif = NULL, updated_at = NOW()
        WHERE id = ? AND id = ?`,
       [document_type, date_debut, date_fin, delai_legale, date_destruction_prevue || null, boites, local_destination, observations, archiveId, archiveId],
       (err, result) => {
@@ -340,10 +341,23 @@ router.put('/:id/status', (req, res) => {
           return res.status(500).json({ error: err.message });
         }
 
-        const statusLabel = statut === 'validated' ? 'validée' : 'rejetée';
-        const notificationTitle = statut === 'validated' ? 'Demande validée' : 'Demande rejetée';
+        let statusLabel = 'mise à jour';
+        let notificationTitle = 'Mise à jour de votre demande';
+        let notificationType = 'info';
+        if (statut === 'validated') {
+          statusLabel = 'validée';
+          notificationTitle = 'Demande validée';
+          notificationType = 'success';
+        } else if (statut === 'rejected') {
+          statusLabel = 'rejetée';
+          notificationTitle = 'Demande rejetée';
+          notificationType = 'error';
+        } else if (statut === 'destroyed' || statut === 'détruite') {
+          statusLabel = 'détruite (physiquement éliminée)';
+          notificationTitle = 'Archive détruite';
+          notificationType = 'info';
+        }
         const notificationMessage = `Votre demande ${archive.ref} a été ${statusLabel}${motif ? ` : ${motif}` : ''}`;
-        const notificationType = statut === 'validated' ? 'success' : 'error';
         const notificationMeta = JSON.stringify({ archiveId: archiveId, ref: archive.ref, status: statut });
 
         db.query(

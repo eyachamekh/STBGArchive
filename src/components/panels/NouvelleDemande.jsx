@@ -177,10 +177,10 @@ const NouvelleDemande = () => {
       nb: parseInt(nb) || 1,
       local,
       obs,
-      statut: editMode ? editRequest.statut : 'pending',
+      statut: 'pending',
       created: editMode ? editRequest.created : now.toLocaleDateString('fr-TN'),
       annee: y,
-      motif: editMode ? editRequest.motif : ''
+      motif: ''
     };
 
     // Save to database
