@@ -3,8 +3,8 @@ const jwt = require('jsonwebtoken');
 const notificationController = require('../controllers/notificationController');
 
 const router = express.Router();
-const SECRET = process.env.JWT_SECRET || 'stbg_secret_key';
-
+const SECRET = process.env.JWT_SECRET;
+if (!SECRET) { throw new Error('JWT_SECRET manquant : arrêt du serveur'); }
 const authenticate = (req, res, next) => {
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) return res.status(401).json({ message: 'No token provided' });

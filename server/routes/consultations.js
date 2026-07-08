@@ -3,7 +3,8 @@ const jwt = require('jsonwebtoken');
 const consultationController = require('../controllers/consultationController');
 
 const router = express.Router();
-const SECRET = process.env.JWT_SECRET || 'stbg_secret_key';
+const SECRET = process.env.JWT_SECRET;
+if (!SECRET) { throw new Error('JWT_SECRET manquant : arrêt du serveur'); }
 
 const authenticate = (req, res, next) => {
   const token = req.headers.authorization?.split(' ')[1];

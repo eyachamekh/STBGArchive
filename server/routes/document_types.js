@@ -1,7 +1,10 @@
 const express = require('express');
 const docTypeController = require('../controllers/docTypeController');
+const auth = require('../middleware/auth');
 
 const router = express.Router();
+
+router.use(auth);
 
 // GET ALL DOCUMENT TYPES
 router.get('/', docTypeController.getDocumentTypes);
