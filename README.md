@@ -290,6 +290,7 @@ Users authenticate using their credentials. After successful login, a JWT token 
 
 
 
+
 ---
 
 # 📌 Main Features
