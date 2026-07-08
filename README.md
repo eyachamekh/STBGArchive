@@ -235,7 +235,7 @@ database/stbgArchive.sql
 Create a `.env` file inside the **server** folder.
 
 ```env
-PORT=5000
+PORT=3000
 
 DB_HOST=localhost
 DB_USER=root
