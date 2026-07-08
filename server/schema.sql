@@ -138,4 +138,5 @@ INSERT IGNORE INTO services (code, service_name) VALUES
 ('STE', 'STEP'),
 ('PNC', 'PNC'),
 ('PAR', 'Parc Roulant'),
-('LOG', 'Logistique');
+('LOG', 'Logistique'),
+('ARC', 'Service Archive');

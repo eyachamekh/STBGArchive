@@ -1,6 +1,6 @@
 import { useContext, useState } from 'react';
 import { AppContext } from '../../context/AppContext';
-import { COLORS } from '../../data';
+import { COLORS } from '../../utils/constants';
 import NotificationPanel from './NotificationPanel';
 
 const Topbar = () => {

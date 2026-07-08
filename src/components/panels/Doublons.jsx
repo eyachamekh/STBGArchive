@@ -37,10 +37,10 @@ const Doublons = () => {
           <div className="al al-g">✓ Aucun doublon potentiel détecté.</div>
         ) : (
           dups.map((dp, i) => (
-            <div key={i} style={{ background: 'rgba(230,126,34,.06)', border: '2px solid var(--orange)', borderRadius: '9px', padding: '14px', marginBottom: '14px' }}>
-              <div style={{ fontSize: '13px', fontWeight: 700, color: '#f39c12', marginBottom: '8px' }}>⚠ Doublon #{i + 1} — {dp.kw}</div>
-              <div style={{ fontSize: '11px', color: '#f39c12', marginBottom: '10px' }}>{dp.msg}</div>
-              <div className="tw" style={{ margin: 0 }}>
+            <div key={i} className="doublon-box">
+              <div className="doublon-title">⚠ Doublon #{i + 1} — {dp.kw}</div>
+              <div className="doublon-msg">{dp.msg}</div>
+              <div className="tw m-0">
                 <table>
                   <thead>
                     <tr><th>Référence</th><th>Type</th><th>Service</th><th>Responsable</th><th>Période</th><th>Statut</th><th>Action</th></tr>
@@ -48,11 +48,11 @@ const Doublons = () => {
                   <tbody>
                     {dp.found.map(d => (
                       <tr key={d.id}>
-                        <td><span style={{ fontFamily: "'DM Mono',monospace", color: 'var(--gold)', fontWeight: 700, fontSize: '11px' }}>{d.ref}</span></td>
+                        <td><span className="ref-mono">{d.ref}</span></td>
                         <td className="tdm">{d.type}</td>
                         <td>{d.svc}</td>
-                        <td style={{ fontSize: '10px' }}>{d.resp}</td>
-                        <td style={{ fontSize: '10px' }}>{fmtDate(d.dd)} → {fmtDate(d.df)}</td>
+                        <td className="fs-10">{d.resp}</td>
+                        <td className="fs-10">{fmtDate(d.dd)} → {fmtDate(d.df)}</td>
                         <td>{statutBadge(d.statut)}</td>
                         <td><button className="btn bdanger bsm" onClick={() => annulerDup(d.id)}>✕ Annuler</button></td>
                       </tr>

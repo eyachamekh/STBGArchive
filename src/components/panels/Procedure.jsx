@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from 'react';
 import { AppContext } from '../../context/AppContext';
-import { COLORS } from '../../data';
+import { COLORS } from '../../utils/constants';
 
 const CLASSIFICATION_CODES = [
   { code: 'CPT', service: 'Comptabilité', responsible: 'Imen Ben Achour', color: COLORS['CPT'] || '#666' },
@@ -145,7 +145,7 @@ const Procedure = () => {
 
   return (
     <div className="panel active">
-      <div className="tw" style={{ marginTop: '24px' }}>
+      <div className="tw mt-24">
         <div className="twh"><div className="twt">Codes de Classement Normalisés STBG</div></div>
         <table>
           <thead>
@@ -154,19 +154,19 @@ const Procedure = () => {
               <th>Service</th>
               <th>Responsable</th>
               <th>Couleur étiquette</th>
-              {isAdmin && <th style={{ width: '80px' }}>Modifier</th>}
+              {isAdmin && <th className="col-narrow">Modifier</th>}
             </tr>
           </thead>
           <tbody>
             {classificationCodes.map((entry, index) => {
               return (
                 <tr key={`${entry.code}-${index}`}>
-                  <td style={{ fontFamily: "'DM Mono',monospace", color: 'var(--gold)', fontWeight: 700 }}>
+                  <td className="ref-mono">
                     {editingClassIndex === index && isAdmin ? (
                       <input
                         value={entry.code}
                         onChange={(e) => updateClassificationField(index, 'code', e.target.value)}
-                        style={{ width: '100%', padding: '4px', fontSize: '11px', fontFamily: "'DM Mono',monospace" }}
+                        className="table-input-mono"
                       />
                     ) : entry.code}
                   </td>
@@ -175,7 +175,7 @@ const Procedure = () => {
                       <input
                         value={entry.service}
                         onChange={(e) => updateClassificationField(index, 'service', e.target.value)}
-                        style={{ width: '100%', padding: '4px', fontSize: '11px' }}
+                        className="table-input"
                       />
                     ) : (
                       <span className="tdm">{entry.service}</span>
@@ -186,7 +186,7 @@ const Procedure = () => {
                       <input
                         value={entry.responsible}
                         onChange={(e) => updateClassificationField(index, 'responsible', e.target.value)}
-                        style={{ width: '100%', padding: '4px', fontSize: '11px' }}
+                        className="table-input"
                       />
                     ) : entry.responsible}
                   </td>
@@ -196,24 +196,24 @@ const Procedure = () => {
                         type="color"
                         value={entry.color}
                         onChange={(e) => updateClassificationField(index, 'color', e.target.value)}
-                        style={{ width: '100%', padding: '4px', fontSize: '11px', height: '30px', border: '1px solid var(--border)', borderRadius: '6px' }}
+                        className="color-input"
                       />
                     ) : (
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '11px', color: 'var(--text2)' }}>
-                        <span style={{ width: '16px', height: '16px', background: entry.color, borderRadius: '4px', display: 'inline-block', border: '1px solid rgba(255,255,255,.12)' }}></span>
+                      <span className="color-swatch-label">
+                        <span className="color-swatch" style={{ background: entry.color }}></span>
                         {entry.color.toUpperCase()}
                       </span>
                     )}
                   </td>
                   {isAdmin && (
-                    <td style={{ textAlign: 'center' }}>
+                    <td className="text-center">
                       {editingClassIndex === index ? (
-                        <div style={{ display: 'flex', gap: '4px', justifyContent: 'center' }}>
-                          <button className="btn bgreen bsm" onClick={saveClassificationEdit} style={{ padding: '4px 8px', fontSize: '12px' }}>✓</button>
-                          <button className="btn bg2 bsm" onClick={cancelClassificationEdit} style={{ padding: '4px 8px', fontSize: '12px' }}>✕</button>
+                        <div className="icon-btn-group">
+                          <button className="btn bgreen bsm icon-btn" onClick={saveClassificationEdit}>✓</button>
+                          <button className="btn bg2 bsm icon-btn" onClick={cancelClassificationEdit}>✕</button>
                         </div>
                       ) : (
-                        <button className="btn bg2 bsm" onClick={() => setEditingClassIndex(index)} style={{ padding: '4px 8px', fontSize: '12px' }}>✎</button>
+                        <button className="btn bg2 bsm icon-btn" onClick={() => setEditingClassIndex(index)}>✎</button>
                       )}
                     </td>
                   )}

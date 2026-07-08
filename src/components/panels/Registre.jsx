@@ -41,16 +41,16 @@ const Registre = () => {
 
   return (
     <div className="panel active">
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '14px', alignItems: 'center' }}>
-        <div className="sb" style={{ flex: 1, margin: 0 }}>
-          <span style={{ color: 'var(--text3)' }}>⌕</span>
+      <div className="flex gap-8 mb-14 items-center">
+        <div className="sb flex-1 m-0">
+          <span className="text-muted">⌕</span>
           <input placeholder="Référence, service, type document..." value={filter} onChange={e => setFilter(e.target.value)} />
         </div>
         <button
           className={`btn bsm ${showDestroyed ? 'bdanger' : 'bg2'}`}
           onClick={() => setShowDestroyed(v => !v)}
         >
-          ⊘ À détruire{destroyedCount > 0 && <span className="nbadge nb-r" style={{ marginLeft: '6px' }}>{destroyedCount}</span>}
+          ⊘ À détruire{destroyedCount > 0 && <span className="nbadge nb-r ml-6">{destroyedCount}</span>}
         </button>
       </div>
 
@@ -71,26 +71,31 @@ const Registre = () => {
           </thead>
           <tbody>
             {!list.length ? (
-              <tr><td colSpan="10" style={{ textAlign: 'center', padding: '24px', color: 'var(--text3)' }}>
+              <tr><td colSpan="10" className="empty-row">
                 {showDestroyed ? 'Aucune archive détruite.' : 'Aucune boîte.'}
               </td></tr>
             ) : (
               list.map(d => {
-                const ri = d.refDebut && d.refFin ? `${d.refDebut} → ${d.refFin}` : (d.refDebut || d.refFin || '—');
+                const boites = d.boites_details?.length > 0 ? d.boites_details : [{ ref_debut: d.refDebut || '', ref_fin: d.refFin || '' }];
+                const hasRefs = boites.some(b => b.ref_debut || b.ref_fin);
                 const destroyed = isDestroyed(d);
                 return (
                   <tr key={d.id} style={destroyed ? { background: 'rgba(200,16,46,0.05)' } : {}}>
-                    <td><span style={{ fontFamily: "'DM Mono',monospace", color: 'var(--gold)', fontSize: '11px' }}>{d.ref}</span></td>
+                    <td><span className="ref-mono">{d.ref}</span></td>
                     <td className="tdm">{d.type}</td>
                     <td>{d.svc}</td>
-                    <td style={{ fontSize: '10px' }}>{fmtDate(d.dd)}<br /><span style={{ color: 'var(--text3)' }}>à {fmtDate(d.df)}</span></td>
-                    <td style={{ fontSize: '10px', fontFamily: "'DM Mono',monospace", maxWidth: '120px' }}>{ri}</td>
-                    <td><span className={`badge ${d.delai === 'Permanent' ? 'bb' : 'bo'}`}>{d.delai}</span></td>
-                    <td style={{ fontSize: '10px', color: destroyed ? 'var(--red)' : 'var(--text3)', fontFamily: "'DM Mono',monospace", fontWeight: destroyed ? 700 : 400 }}>
-                      {fmtDate(d.destRaw)}
-                      {destroyed && <div><span className="badge br" style={{ marginTop: '3px' }}>⊘ Dépassée</span></div>}
+                    <td className="fs-10">{fmtDate(d.dd)}<br /><span className="text-muted">à {fmtDate(d.df)}</span></td>
+                    <td className="fs-10 mono maxw-120">
+                      {!hasRefs ? '—' : boites.map((b, i) => (b.ref_debut || b.ref_fin) ? (
+                        <div key={i}>{boites.length > 1 && <span className="text-muted">B{i+1}: </span>}{b.ref_debut || '—'} → {b.ref_fin || '—'}</div>
+                      ) : null)}
                     </td>
-                    <td style={{ fontSize: '10px' }}>{d.local}</td>
+                    <td><span className={`badge ${d.delai === 'Permanent' ? 'bb' : 'bo'}`}>{d.delai}</span></td>
+                    <td className={`fs-10 mono ${destroyed ? 'text-red fw-700' : 'text-muted'}`}>
+                      {fmtDate(d.destRaw)}
+                      {destroyed && <div><span className="badge br mt-3">⊘ Dépassée</span></div>}
+                    </td>
+                    <td className="fs-10">{d.local}</td>
                     <td>{statutBadge(d.statut)}</td>
                     <td>{d.statut === 'validated' ? <button className="btn bg2 bsm" onClick={() => setPrintDemande(d)}>🖨</button> : null}</td>
                   </tr>

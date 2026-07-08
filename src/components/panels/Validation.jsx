@@ -14,15 +14,16 @@ const MOTIF_REASONS = [
 const Validation = () => {
   const { currentUser, demandes, updateDemandeStatus, setPrintDemande, refreshDemandes } = useContext(AppContext);
   const isAdmin = currentUser?.role === 'admin';
+  const isPrivileged = isAdmin || currentUser?.role === 'archiviste';
 
   const isOwner = (d) => {
-    if (isAdmin) return true;
+    if (isPrivileged) return true;
     return d.uid === currentUser?.id ||
            d.uid === String(currentUser?.dbId) ||
            d.resp === currentUser?.name;
   };
 
-  const myRejected = !isAdmin ? demandes.filter(d => isOwner(d) && d.statut === 'rejected') : [];
+  const myRejected = !isPrivileged ? demandes.filter(d => isOwner(d) && d.statut === 'rejected') : [];
 
   const [tab, setTab] = useState('pending');
   const [rejectId, setRejectId] = useState(null);
@@ -33,13 +34,14 @@ const Validation = () => {
   const [validateId, setValidateId] = useState(null);
   const [validateDem, setValidateDem] = useState(null);
   const [validateNote, setValidateNote] = useState('');
+  const [validateMissingRefs, setValidateMissingRefs] = useState('');
 
   useEffect(() => {
     if (currentUser) refreshDemandes(currentUser);
   }, []);
 
   useEffect(() => {
-    if (!isAdmin && myRejected.length > 0 && tab === 'pending') {
+    if (!isPrivileged && myRejected.length > 0 && tab === 'pending') {
       setTab('rejected');
     }
   }, [myRejected.length]);
@@ -66,6 +68,7 @@ const Validation = () => {
     setValidateId(d.id);
     setValidateDem(d);
     setValidateNote('');
+    setValidateMissingRefs('');
   };
 
   const buildMotif = () => {
@@ -87,10 +90,15 @@ const Validation = () => {
   };
 
   const confirmerValidation = () => {
-    updateDemandeStatus(validateId, 'validated', validateNote.trim());
+    const note = validateNote.trim();
+    const fullMotif = validateMissingRefs.trim()
+      ? `Référence manquante : ${validateMissingRefs.trim()}${note ? ' — ' + note : ''}`
+      : note;
+    updateDemandeStatus(validateId, 'validated', fullMotif);
     setValidateId(null);
     setValidateDem(null);
     setValidateNote('');
+    setValidateMissingRefs('');
   };
 
   return (
@@ -99,7 +107,7 @@ const Validation = () => {
         <div className={`tab ${tab === 'pending' ? 'active' : ''}`} onClick={() => setTab('pending')}>En attente</div>
         <div className={`tab ${tab === 'validated' ? 'active' : ''}`} onClick={() => setTab('validated')}>Validées</div>
         <div className={`tab ${tab === 'rejected' ? 'active' : ''}`} onClick={() => setTab('rejected')}>
-          Rejetées {!isAdmin && myRejected.length > 0 && <span style={{ background: 'var(--red)', color: '#fff', borderRadius: '99px', fontSize: '9px', padding: '1px 6px', marginLeft: '4px' }}>{myRejected.length}</span>}
+          Rejetées {!isPrivileged && myRejected.length > 0 && <span className="count-badge">{myRejected.length}</span>}
         </div>
       </div>
       <div className="tw">
@@ -115,39 +123,49 @@ const Validation = () => {
           </thead>
           <tbody>
             {!list.length ? (
-              <tr><td colSpan="9" style={{ textAlign: 'center', padding: '24px', color: 'var(--text3)' }}>Aucune demande.</td></tr>
+              <tr><td colSpan="9" className="empty-row">Aucune demande.</td></tr>
             ) : (
               list.map(d => {
-                const firstBoite = d.boites_details?.[0];
-                const refDebut = firstBoite?.ref_debut || d.refDebut || '';
-                const refFin = firstBoite?.ref_fin || d.refFin || '';
-                const refInt = refDebut || refFin ? `${refDebut || '—'} → ${refFin || '—'}` : '—';
+                const boites = d.boites_details?.length > 0 ? d.boites_details : [{ ref_debut: d.refDebut || '', ref_fin: d.refFin || '' }];
+                const hasRefs = boites.some(b => b.ref_debut || b.ref_fin);
                 return (
                   <tr key={d.id}>
-                    <td><span style={{ fontFamily: "'DM Mono',monospace", color: 'var(--gold)', fontWeight: 700, fontSize: '11px' }}>{d.ref}</span></td>
+                    <td><span className="ref-mono">{d.ref}</span></td>
                     <td className="tdm">{d.type}</td>
                     <td>{d.svc}</td>
-                    <td style={{ fontSize: '10px' }}>{d.resp}</td>
-                    <td style={{ fontSize: '10px' }}>{fmtDate(d.dd)}<br /><span style={{ color: 'var(--text3)' }}>→{fmtDate(d.df)}</span></td>
-                    <td style={{ fontSize: '10px', fontFamily: "'DM Mono',monospace" }}>{refInt}</td>
-                    <td style={{ textAlign: 'center' }}>{d.nb}</td>
-                    <td style={{ fontSize: '10px' }}>{d.local}</td>
+                    <td className="fs-10">{d.resp}</td>
+                    <td className="fs-10">{fmtDate(d.dd)}<br /><span className="text-muted">→{fmtDate(d.df)}</span></td>
+                    <td className="fs-10 mono">
+                      {!hasRefs ? '—' : boites.map((b, i) => (b.ref_debut || b.ref_fin) ? (
+                        <div key={i}>{boites.length > 1 && <span className="text-muted">B{i+1}: </span>}{b.ref_debut || '—'} → {b.ref_fin || '—'}</div>
+                      ) : null)}
+                    </td>
+                    <td className="text-center">{d.nb}</td>
+                    <td className="fs-10">{d.local}</td>
                     <td>
                       {tab === 'pending' && (
-                        <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-                          {isAdmin && <button className="btn bgreen bsm" onClick={() => openValidation(d)}>✓</button>}
-                          {isAdmin && <button className="btn bdanger bsm" onClick={() => openRejet(d)}>✗</button>}
+                        <div className="flex gap-4 flex-wrap">
+                          {isPrivileged && <button className="btn bgreen bsm" onClick={() => openValidation(d)}>✓</button>}
+                          {isPrivileged && <button className="btn bdanger bsm" onClick={() => openRejet(d)}>✗</button>}
                         </div>
                       )}
                       {tab === 'validated' && (
                         <div>
                           <button className="btn bgold bsm" onClick={() => setPrintDemande(d)}>🖨</button>
-                          {d.motif && <div style={{ fontSize: '10px', color: 'var(--text3)', marginTop: '6px', maxWidth: '140px' }}>{d.motif}</div>}
+                          {d.motif && (
+                            <div className="mt-4">
+                              <span className="badge bg inline-block">✓ Réf. confirmées</span>
+                              <div className="validated-motif">{d.motif}</div>
+                            </div>
+                          )}
                         </div>
                       )}
                       {tab === 'rejected' && (
                         <div>
-                          <div style={{ fontSize: '10px', color: 'var(--red)', maxWidth: '120px' }}>{d.motif}</div>
+                          <div className="rejected-motif">{d.motif}</div>
+                          {d.motif?.toLowerCase().includes('référence manquante') && (
+                            <span className="badge br mt-4 inline-block">⚠ Réf. manquante</span>
+                          )}
                         </div>
                       )}
                     </td>
@@ -164,12 +182,23 @@ const Validation = () => {
           <div className="modal modal-sm">
             <div className="mt">Valider la Demande</div>
             <div className="ms">
-              Demande <span style={{ fontFamily: "'DM Mono',monospace", color: 'var(--gold)' }}>{validateDem?.ref}</span> — {validateDem?.type}
+              Demande <span className="ref-mono">{validateDem?.ref}</span> — {validateDem?.type}
             </div>
-            <div className="fgrp" style={{ marginBottom: '12px' }}>
-              <div className="flbl">Remarque (optionnelle)</div>
-              <textarea
-                placeholder="Ajouter une remarque ou un commentaire..."
+            <div className="fgrp mb-12">
+              <div className="flbl">Références manquantes (optionnel)</div>
+              <input
+                className="finp"
+                placeholder="Ex: N°045, N°046, N°052"
+                value={validateMissingRefs}
+                onChange={e => setValidateMissingRefs(e.target.value)}
+              />
+              <div className="fs-10 text-muted mt-4">Précisez les références manquantes dans la boîte (séparées par des virgules)</div>
+            </div>
+            <div className="fgrp mb-12">
+              <div className="flbl">Remarque (optionnel)</div>
+              <input
+                className="finp"
+                placeholder="Commentaire ou observation..."
                 value={validateNote}
                 onChange={e => setValidateNote(e.target.value)}
               />
@@ -187,9 +216,9 @@ const Validation = () => {
           <div className="modal modal-sm">
             <div className="mt">Rejeter la Demande</div>
             <div className="ms">
-              Demande <span style={{ fontFamily: "'DM Mono',monospace", color: 'var(--gold)' }}>{rejectDem?.ref}</span> — {rejectDem?.type}
+              Demande <span className="ref-mono">{rejectDem?.ref}</span> — {rejectDem?.type}
             </div>
-            <div className="fgrp" style={{ marginBottom: '12px' }}>
+            <div className="fgrp mb-12">
               <div className="flbl">Motif de rejet *</div>
               <select value={selectedReason} onChange={e => { setSelectedReason(e.target.value); setMissingRefs(''); setCustomMotif(''); }}>
                 <option value="">-- Sélectionner --</option>
@@ -198,7 +227,7 @@ const Validation = () => {
             </div>
 
             {selectedReason === 'Référence manquante' && (
-              <div className="fgrp" style={{ marginBottom: '12px' }}>
+              <div className="fgrp mb-12">
                 <div className="flbl">Numéro(s) de référence manquant(s)</div>
                 <input
                   className="finp"
@@ -206,14 +235,14 @@ const Validation = () => {
                   value={missingRefs}
                   onChange={e => setMissingRefs(e.target.value)}
                 />
-                <div style={{ fontSize: '10px', color: 'var(--text3)', marginTop: '4px' }}>
+                <div className="fs-10 text-muted mt-4">
                   Précisez les numéros manquants (séparés par des virgules)
                 </div>
               </div>
             )}
 
             {selectedReason === 'Autre' && (
-              <div className="fgrp" style={{ marginBottom: '12px' }}>
+              <div className="fgrp mb-12">
                 <div className="flbl">Préciser *</div>
                 <textarea
                   placeholder="Décrivez le motif de rejet..."
@@ -224,7 +253,7 @@ const Validation = () => {
             )}
 
             {selectedReason && selectedReason !== 'Référence manquante' && selectedReason !== 'Autre' && (
-              <div className="al al-r" style={{ marginBottom: '12px' }}>
+              <div className="al al-r mb-12">
                 ✗ Motif sélectionné : <strong>{selectedReason}</strong>
               </div>
             )}

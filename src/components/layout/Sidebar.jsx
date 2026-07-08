@@ -1,6 +1,6 @@
 import { useContext } from 'react';
 import { AppContext } from '../../context/AppContext';
-import { DUP_RULES } from '../../data';
+import { DUP_RULES } from '../../utils/constants';
 
 const Sidebar = () => {
   const { currentUser, logout, activePanel, setActivePanel, demandes, consultations } = useContext(AppContext);
@@ -41,10 +41,12 @@ const Sidebar = () => {
         <NavItem id="dashboard" icon="◈" lbl="Tableau de Bord" />
 
         <div className="slbl">Archives</div>
-        {r !== 'admin' && <NavItem id="nouvelle" icon="＋" lbl="Nouvelle Demande" />}
-        {r !== 'admin' && <NavItem id="mes" icon="◧" lbl="Mes Demandes" badgeCount={mine} badgeClass="nb-g" />}
-        {r !== 'admin' && <NavItem id="validation" icon="✓" lbl="Mes Validations" badgeCount={myRejected} badgeClass="nb-r" />}
-        {r !== 'admin' && <NavItem id="consultation" icon="📤" lbl="Demande de Consultation" />}
+        {(r === 'service' || r === 'archiviste') && <NavItem id="nouvelle" icon="＋" lbl="Nouvelle Demande" />}
+        {(r === 'service' || r === 'archiviste') && <NavItem id="mes" icon="◧" lbl="Mes Demandes" badgeCount={mine} badgeClass="nb-g" />}
+        {(r === 'service' || r === 'archiviste') && <NavItem id="validation" icon="✓" lbl="Mes Validations" badgeCount={myRejected} badgeClass="nb-r" />}
+        {(r === 'service' || r === 'archiviste') && <NavItem id="consultation" icon="📤" lbl="Demande de Consultation" />}
+        {r === 'service' && <NavItem id="gestion-consult" icon="📋" lbl="Gestion Consultations" badgeCount={cpend} badgeClass="nb-b" />}
+
 
         {(r === 'archiviste' || r === 'admin') && (
           <>
@@ -53,6 +55,13 @@ const Sidebar = () => {
             <NavItem id="gestion-consult" icon="📋" lbl="Gestion Consultations" badgeCount={cpend} badgeClass="nb-b" />
             <NavItem id="registre" icon="▣" lbl="Registre Général" badgeCount={total} badgeClass="nb-g" />
             <NavItem id="destruction" icon="⊘" lbl="À Détruire" />
+          </>
+        )}
+
+        {r === 'archiviste' && (
+          <>
+            <div className="slbl">Administration</div>
+            <NavItem id="users" icon="🔐" lbl="Utilisateurs" />
           </>
         )}
 

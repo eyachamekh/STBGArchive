@@ -1,33 +1,35 @@
 const db = require('./db');
 const bcrypt = require('bcrypt');
+require('dotenv').config();
 
 const USERS = [
-  {id:'karim',   name:'Karim Sghaouria',  svc:'Audit',                  code:'AUD',role:'archiviste',pass:'stbg2025'},
-  {id:'admin',   name:'Administrateur',    svc:'Administration',         code:'ADM',role:'admin',     pass:'admin123'},
-  {id:'imen',    name:'Imen Ben Achour',   svc:'Comptabilité',           code:'CPT',role:'service',   pass:'cpt2025'},
-  {id:'sonia',   name:'Sonia Fligene',     svc:'Commercial',             code:'COM',role:'service',   pass:'com2025'},
-  {id:'jihene',  name:'Jihene Fredj',      svc:'Recouvrement',           code:'REC',role:'service',   pass:'rec2025'},
-  {id:'sofiane', name:'Sofiane Mnasri',    svc:'Formation',              code:'FOR',role:'service',   pass:'for2025'},
-  {id:'dallel',  name:'Dallel Kaabachi',   svc:'Assurance',              code:'ASS',role:'service',   pass:'ass2025'},
-  {id:'maroua',  name:'Maroua Baks',       svc:'QHSE',                   code:'QHS',role:'service',   pass:'qhs2025'},
-  {id:'sondes',  name:'Sondes Daly',       svc:'Finance',                code:'FIN',role:'service',   pass:'fin2025'},
-  {id:'bselmen', name:'Bechir Selmen',     svc:'Achat',                  code:'ACH',role:'service',   pass:'ach2025'},
-  {id:'anis',    name:'Anis Mefteh',       svc:'Supply Chain',           code:'SCH',role:'service',   pass:'sch2025'},
-  {id:'wiem',    name:'Wiem Khiari',       svc:'RH',                     code:'RH', role:'service',   pass:'rh2025'},
-  {id:'mourad',  name:'Mourad Ben Azzouz', svc:'Sécurité',               code:'SEC',role:'service',   pass:'sec2025'},
-  {id:'belhassen',name:'Belhassen Mannai', svc:'Stock Plein',            code:'STP',role:'service',   pass:'stp2025'},
-  {id:'faouzi',  name:'Faouzi Ghenimi',    svc:'Magasin Central',        code:'MAG',role:'service',   pass:'mag2025'},
-  {id:'keissi',  name:'Mohamed Keissi',    svc:'Stock Vide',             code:'STV',role:'service',   pass:'stv2025'},
-  {id:'emna',    name:'Emna Rahhali',      svc:'QHSE - Contrôle Qualité',code:'CQL',role:'service',   pass:'cql2025'},
-  {id:'nizar',   name:'Nizar Khemiri',     svc:'QHSE - HSE',             code:'HSE',role:'service',   pass:'hse2025'},
-  {id:'mourad2', name:'Mourad Bouzidi',    svc:'Bureau Méthodes',        code:'BME',role:'service',   pass:'bme2025'},
-  {id:'mhassen', name:'Mohamed Hassen',    svc:'Production',             code:'PRD',role:'service',   pass:'prd2025'},
-  {id:'moncef',  name:'Moncef Ben Zayed',  svc:'Siroperie',              code:'SIR',role:'service',   pass:'sir2025'},
-  {id:'step',    name:'Mohamed Hassen',    svc:'STEP',                   code:'STE',role:'service',   pass:'ste2025'},
-  {id:'habib',   name:'Habib Hammouda',    svc:'PNC',                    code:'PNC',role:'service',   pass:'pnc2025'},
-  {id:'bilel',   name:'Bilel Souabni',     svc:'Parc Roulant',           code:'PAR',role:'service',   pass:'par2025'},
-  {id:'braddadi',name:'Bechir Raddadi',    svc:'Logistique',             code:'LOG',role:'service',   pass:'log2025'},
+  {id:'karim',   name:'Karim Sghaouria',  svc:'Audit',                  code:'AUD',role:'archiviste'},
+  {id:'admin',   name:'Administrateur',    svc:'Administration',         code:'ADM',role:'admin'},
+  {id:'imen',    name:'Imen Ben Achour',   svc:'Comptabilité',           code:'CPT',role:'service'},
+  {id:'sonia',   name:'Sonia Fligene',     svc:'Commercial',             code:'COM',role:'service'},
+  {id:'jihene',  name:'Jihene Fredj',      svc:'Recouvrement',           code:'REC',role:'service'},
+  {id:'sofiane', name:'Sofiane Mnasri',    svc:'Formation',              code:'FOR',role:'service'},
+  {id:'dallel',  name:'Dallel Kaabachi',   svc:'Assurance',              code:'ASS',role:'service'},
+  {id:'maroua',  name:'Maroua Baks',       svc:'QHSE',                   code:'QHS',role:'service'},
+  {id:'sondes',  name:'Sondes Daly',       svc:'Finance',                code:'FIN',role:'service'},
+  {id:'bselmen', name:'Bechir Selmen',     svc:'Achat',                  code:'ACH',role:'service'},
+  {id:'anis',    name:'Anis Mefteh',       svc:'Supply Chain',           code:'SCH',role:'service'},
+  {id:'wiem',    name:'Wiem Khiari',       svc:'RH',                     code:'RH', role:'service'},
+  {id:'mourad',  name:'Mourad Ben Azzouz', svc:'Sécurité',               code:'SEC',role:'service'},
+  {id:'belhassen',name:'Belhassen Mannai', svc:'Stock Plein',            code:'STP',role:'service'},
+  {id:'faouzi',  name:'Faouzi Ghenimi',    svc:'Magasin Central',        code:'MAG',role:'service'},
+  {id:'keissi',  name:'Mohamed Keissi',    svc:'Stock Vide',             code:'STV',role:'service'},
+  {id:'emna',    name:'Emna Rahhali',      svc:'QHSE - Contrôle Qualité',code:'CQL',role:'service'},
+  {id:'nizar',   name:'Nizar Khemiri',     svc:'QHSE - HSE',             code:'HSE',role:'service'},
+  {id:'mourad2', name:'Mourad Bouzidi',    svc:'Bureau Méthodes',        code:'BME',role:'service'},
+  {id:'mhassen', name:'Mohamed Hassen',    svc:'Production',             code:'PRD',role:'service'},
+  {id:'moncef',  name:'Moncef Ben Zayed',  svc:'Siroperie',              code:'SIR',role:'service'},
+  {id:'step',    name:'Mohamed Hassen',    svc:'STEP',                   code:'STE',role:'service'},
+  {id:'habib',   name:'Habib Hammouda',    svc:'PNC',                    code:'PNC',role:'service'},
+  {id:'bilel',   name:'Bilel Souabni',     svc:'Parc Roulant',           code:'PAR',role:'service'},
+  {id:'braddadi',name:'Bechir Raddadi',    svc:'Logistique',             code:'LOG',role:'service'},
 ];
+
 
 const DOCS = {
   CPT:[{n:'Journaux comptables',d:'10 ans'},{n:'États financiers / Bilans',d:'10 ans'},{n:'Comptes de résultat',d:'10 ans'},{n:'Déclarations fiscales IS/TVA',d:'10 ans'},{n:'Grand livre comptable',d:'10 ans'},{n:'Pièces justificatives comptables',d:'10 ans'},{n:'Balances de vérification',d:'10 ans'}],
@@ -85,7 +87,16 @@ async function seed() {
 
   // Seed Users
   for (let u of USERS) {
-    const hash = await bcrypt.hash(u.pass, 10);
+    let password;
+    if (u.role === 'admin') {
+      password = process.env.SEED_ADMIN_PASSWORD || 'admin123';
+    } else if (u.role === 'archiviste') {
+      password = process.env.SEED_ARCHIVISTE_PASSWORD || 'stbg2025';
+    } else {
+      const suffix = process.env.SEED_USER_PASSWORD_SUFFIX || '2025';
+      password = process.env.SEED_USER_PASSWORD || `${u.code.toLowerCase()}${suffix}`;
+    }
+    const hash = await bcrypt.hash(password, 10);
     await new Promise((resolve, reject) => {
       db.query(
         "INSERT INTO users (username, full_name, service_code, role, password) VALUES (?,?,?,?,?)",

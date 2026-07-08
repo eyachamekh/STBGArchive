@@ -1,6 +1,6 @@
 import { useContext } from 'react';
 import { AppContext } from '../../context/AppContext';
-import { DUP_RULES } from '../../data';
+import { DUP_RULES } from '../../utils/constants';
 
 const Dashboard = () => {
   const { currentUser, setActivePanel, demandes, consultations, setPrintDemande } = useContext(AppContext);
@@ -72,17 +72,17 @@ const Dashboard = () => {
       </div>
 
       {dups.length > 0 && (
-        <div style={{ background: 'rgba(230,126,34,.07)', border: '2px solid var(--orange)', borderRadius: '9px', padding: '14px 16px', marginBottom: '14px' }}>
-          <div style={{ fontSize: '13px', fontWeight: 700, color: '#f39c12', marginBottom: '8px' }}>⚠ {dups.length} alerte(s) de doublons</div>
+        <div className="dup-alert">
+          <div className="dup-alert-title">⚠ {dups.length} alerte(s) de doublons</div>
           {dups.slice(0, 2).map((dp, idx) => (
-            <div key={idx} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '7px', padding: '9px 12px', marginBottom: '7px', fontSize: '11px' }}>
+            <div key={idx} className="dup-item">
               <strong>{dp.kw.toUpperCase()}</strong> — {dp.msg}
-              <div style={{ marginTop: '5px' }}>
-                {dp.found.map(d => <span key={d.id} className="badge bo" style={{ margin: '2px' }}>{d.ref} — {d.svc}</span>)}
+              <div className="mt-5">
+                {dp.found.map(d => <span key={d.id} className="badge bo m-2">{d.ref} — {d.svc}</span>)}
               </div>
             </div>
           ))}
-          <button className="btn bsm" style={{ background: 'var(--orange)', color: '#fff', border: 'none', marginTop: '6px' }} onClick={() => setActivePanel('doublons')}>Voir tout →</button>
+          <button className="btn bsm borange mt-6" onClick={() => setActivePanel('doublons')}>Voir tout →</button>
         </div>
       )}
 
@@ -97,14 +97,14 @@ const Dashboard = () => {
           </thead>
           <tbody>
             {!last.length ? (
-              <tr><td colSpan="7" style={{ textAlign: 'center', padding: '26px', color: 'var(--text3)' }}>Aucune demande pour l'instant.</td></tr>
+              <tr><td colSpan="7" className="empty-row-lg">Aucune demande pour l'instant.</td></tr>
             ) : (
               last.map(d => (
                 <tr key={d.id}>
-                  <td><span style={{ fontFamily: "'DM Mono',monospace", color: 'var(--gold)', fontWeight: 700, fontSize: '11px' }}>{d.ref}</span></td>
+                  <td><span className="ref-mono">{d.ref}</span></td>
                   <td className="tdm">{d.type}</td>
                   <td>{d.svc}</td>
-                  <td style={{ fontSize: '10px' }}>{fmtDate(d.dd)} → {fmtDate(d.df)}</td>
+                  <td className="fs-10">{fmtDate(d.dd)} → {fmtDate(d.df)}</td>
                   <td>{d.local}</td>
                   <td>{statutBadge(d.statut)}</td>
                   <td>{d.statut === 'validated' ? <button className="btn bg2 bsm" onClick={() => setPrintDemande(d)}>🖨</button> : null}</td>
@@ -125,10 +125,10 @@ const Dashboard = () => {
             <tbody>
               {activeConsults.map(c => (
                 <tr key={c.id}>
-                  <td><span style={{ fontFamily: "'DM Mono',monospace", color: 'var(--gold)', fontSize: '11px' }}>{c.ref}</span></td>
+                  <td><span className="ref-mono">{c.ref}</span></td>
                   <td className="tdm">{c.nom}</td>
-                  <td>{c.boites.map(b => <span key={b.id} className="badge by" style={{ margin: '1px' }}>{b.ref}</span>)}</td>
-                  <td style={{ fontSize: '10px', fontFamily: "'DM Mono',monospace" }}>{c.created}</td>
+                  <td>{c.boites.map(b => <span key={b.id} className="badge by m-1">{b.ref}</span>)}</td>
+                  <td className="fs-10 mono">{c.created}</td>
                   <td>{cStatutBadge(c.statut)}</td>
                   <td></td>
                 </tr>

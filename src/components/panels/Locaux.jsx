@@ -44,34 +44,34 @@ const Locaux = () => {
         📊 Aperçu physique de l'état des stocks d'archives par local de stockage. Les taux d'occupation sont calculés d'après les boîtes validées.
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginTop: '15px' }}>
+      <div className="locaux-grid">
         {localStats.map((loc, idx) => {
           const percentage = Math.min(Math.round((loc.occupied / loc.totalCapacity) * 100), 100);
           return (
-            <div key={idx} className="tw" style={{ margin: 0, padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+            <div key={idx} className="tw locaux-card">
               <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                  <div style={{ fontWeight: '700', fontSize: '15px', color: 'var(--text)' }}>{loc.name}</div>
-                  <span style={{ fontSize: '11px', fontWeight: 'bold', color: loc.color, background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: '4px' }}>
+                <div className="locaux-card-header">
+                  <div className="locaux-card-title">{loc.name}</div>
+                  <span className="locaux-card-badge" style={{ color: loc.color }}>
                     Local #{idx + 1}
                   </span>
                 </div>
-                <div style={{ fontSize: '11px', color: 'var(--text2)', marginBottom: '15px', lineHeight: '1.4' }}>
+                <div className="locaux-card-desc">
                   {loc.desc}
                 </div>
               </div>
 
               <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: 600, color: 'var(--text2)', marginBottom: '5px' }}>
+                <div className="locaux-bar-labels">
                   <span>Occupation ({loc.occupied} / {loc.totalCapacity} boîtes)</span>
                   <span>{percentage}%</span>
                 </div>
                 
-                <div style={{ width: '100%', height: '8px', background: 'var(--border)', borderRadius: '4px', overflow: 'hidden', marginBottom: '15px' }}>
-                  <div style={{ width: `${percentage}%`, height: '100%', background: loc.color, borderRadius: '4px', transition: 'width 0.5s ease' }}></div>
+                <div className="locaux-bar-wrap">
+                  <div className="locaux-bar-fill" style={{ width: `${percentage}%`, background: loc.color }}></div>
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'var(--text3)' }}>
+                <div className="locaux-bar-footer">
                   <span>Espace Libre: {Math.max(loc.totalCapacity - loc.occupied, 0)} boîtes</span>
                   <span>Status: {percentage > 85 ? '🚨 Critique' : percentage > 60 ? '⚠️ Élevé' : '✓ Normal'}</span>
                 </div>
@@ -81,15 +81,15 @@ const Locaux = () => {
         })}
       </div>
 
-      <div className="tw" style={{ marginTop: '20px' }}>
+      <div className="tw mt-20">
         <div className="twh">
           <div className="twt">Consignes de Sécurité des Locaux</div>
         </div>
-        <div style={{ padding: '20px', fontSize: '12px', color: 'var(--text2)', lineHeight: '1.6' }}>
-          <ul style={{ margin: 0, paddingLeft: '20px' }}>
-            <li style={{ marginBottom: '8px' }}>🚫 L'accès aux locaux d'archives 1 & 2 est strictement réservé à l'archiviste central et aux personnes autorisées.</li>
-            <li style={{ marginBottom: '8px' }}>💨 Les locaux doivent être maintenus à une température ambiante stable (18-22°C) et un taux d'humidité contrôlé (45-55%).</li>
-            <li style={{ marginBottom: '8px' }}>🧯 Les extincteurs à CO2 doivent être vérifiés périodiquement et les issues de secours maintenues dégagées en toutes circonstances.</li>
+        <div className="locaux-rules">
+          <ul className="m-0 pl-20">
+            <li className="mb-8">🚫 L'accès aux locaux d'archives 1 & 2 est strictement réservé à l'archiviste central et aux personnes autorisées.</li>
+            <li className="mb-8">💨 Les locaux doivent être maintenus à une température ambiante stable (18-22°C) et un taux d'humidité contrôlé (45-55%).</li>
+            <li className="mb-8">🧯 Les extincteurs à CO2 doivent être vérifiés périodiquement et les issues de secours maintenues dégagées en toutes circonstances.</li>
             <li>📦 Toutes les boîtes d'archives entrantes doivent obligatoirement porter l'étiquette A4 réglementaire générée par l'application.</li>
           </ul>
         </div>

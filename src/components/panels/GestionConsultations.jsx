@@ -15,7 +15,7 @@ const GestionConsultations = () => {
   const [retourId, setRetourId] = useState(null);
   const [retourEtat, setRetourEtat] = useState('Bon état');
 
-  const list = consultations.filter(c => c.statut === tab && (currentUser?.role === 'admin' || c.uid === currentUser?.id));
+  const list = consultations.filter(c => c.statut === tab && (currentUser?.role === 'admin' || currentUser?.role === 'archiviste' || c.uid === currentUser?.id));
   
   const fmtDate = (s) => {
     if (!s || s.length < 8) return s || '—';
@@ -67,38 +67,38 @@ const GestionConsultations = () => {
           </thead>
           <tbody>
             {!list.length ? (
-              <tr><td colSpan="8" style={{ textAlign: 'center', padding: '24px', color: 'var(--text3)' }}>Aucune demande.</td></tr>
+              <tr><td colSpan="8" className="empty-row">Aucune demande.</td></tr>
             ) : (
               list.map(c => (
                 <tr key={c.id}>
-                  <td><span style={{ fontFamily: "'DM Mono',monospace", color: 'var(--gold)', fontWeight: 700, fontSize: '11px' }}>{c.ref}</span></td>
+                  <td><span className="ref-mono">{c.ref}</span></td>
                   <td className="tdm">{c.nom}</td>
                   <td>{c.svc}</td>
                   <td><span className="badge bo">{c.motif}</span></td>
-                  <td style={{ fontSize: '10px' }}>{c.boites.map(b => <span key={b.id} className="badge by" style={{ margin: '1px' }}>{b.ref}</span>)}</td>
-                  <td style={{ fontSize: '10px', color: 'var(--red)', fontFamily: "'DM Mono',monospace" }}>{fmtDate(c.retour)}</td>
-                  <td style={{ fontSize: '10px', fontFamily: "'DM Mono',monospace" }}>{c.created}</td>
+                  <td className="fs-10">{c.boites.map(b => <span key={b.id} className="badge by m-1">{b.ref}</span>)}</td>
+                  <td className="date-warn-mono">{fmtDate(c.retour)}</td>
+                  <td className="fs-10 mono">{c.created}</td>
                   <td>
-                    {tab === 'pending' && currentUser?.role === 'admin' && (
+                    {tab === 'pending' && (currentUser?.role === 'admin' || currentUser?.role === 'archiviste') && (
                       <button className="btn bgreen bsm" onClick={() => setRemiseId(c.id)}>Remettre</button>
                     )}
-                    {tab === 'pending' && currentUser?.role !== 'admin' && (
+                    {tab === 'pending' && currentUser?.role !== 'admin' && currentUser?.role !== 'archiviste' && (
                       <span className="badge bo">En attente</span>
                     )}
-                    {tab === 'returned' && currentUser?.role === 'admin' && (
+                    {tab === 'returned' && (currentUser?.role === 'admin' || currentUser?.role === 'archiviste') && (
                       <button className="btn bblue bsm" onClick={() => setRetourId(c.id)}>✓ Retour</button>
                     )}
-                    {tab === 'returned' && currentUser?.role !== 'admin' && (
+                    {tab === 'returned' && currentUser?.role !== 'admin' && currentUser?.role !== 'archiviste' && (
                       <span className="badge bo">En retour</span>
                     )}
-                    {tab === 'remis' && currentUser?.role !== 'admin' && (
+                    {tab === 'remis' && currentUser?.role !== 'admin' && currentUser?.role !== 'archiviste' && (
                       <button className="btn bb bsm" onClick={() => marquerRemis(c.id)}>Remis</button>
                     )}
-                    {tab === 'remis' && currentUser?.role === 'admin' && (
+                    {tab === 'remis' && (currentUser?.role === 'admin' || currentUser?.role === 'archiviste') && (
                       <span className="badge bb">En attente de retour</span>
                     )}
                     {tab === 'cloture' && (
-                      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                      <div className="flex gap-6 items-center">
                         <span className={`badge ${(c.retourEtat && (c.retourEtat.includes('dégradé') || c.retourEtat.includes('manquants'))) ? 'by' : 'bg'}`}>Clôturée</span>
                         {c.retourEtat && (c.retourEtat.includes('dégradé') || c.retourEtat.includes('manquants')) && (
                           <button className="btn by bsm" onClick={() => marquerResolu(c.id)}>✓ OK</button>
@@ -118,10 +118,10 @@ const GestionConsultations = () => {
           <div className="modal modal-sm">
             <div className="mt">Confirmer la Remise</div>
             <div className="ms">Les boîtes suivantes seront marquées comme remises au demandeur.</div>
-            <div style={{ marginBottom: '14px' }}>
+            <div className="mb-14">
               {activeConsult.boites.map(b => (
-                <div key={b.id} style={{ padding: '5px 0', borderBottom: '1px solid var(--border)', fontSize: '12px' }}>
-                  <span style={{ fontFamily: "'DM Mono',monospace", color: 'var(--gold)' }}>{b.ref}</span> — {b.type} ({b.local})
+                <div key={b.id} className="consult-boite-line">
+                  <span className="ref-mono">{b.ref}</span> — {b.type} ({b.local})
                 </div>
               ))}
             </div>

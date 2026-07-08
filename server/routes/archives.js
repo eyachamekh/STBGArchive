@@ -3,7 +3,6 @@ const db = require('../db');
 
 const router = express.Router();
 
-// GET ALL ARCHIVES (filtered by user if not admin/audit)
 router.get('/', (req, res) => {
   const { userId, role } = req.query;
   

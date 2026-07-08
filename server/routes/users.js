@@ -9,34 +9,61 @@ const SECRET = process.env.JWT_SECRET || 'stbg_secret_key';
 const authenticateAdmin = (req, res, next) => {
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) return res.status(401).json({ message: 'No token provided' });
-
   try {
     const decoded = jwt.verify(token, SECRET);
-    if (decoded.role !== 'admin') {
-      return res.status(403).json({ message: 'Admin access required' });
-    }
+    if (decoded.role !== 'admin') return res.status(403).json({ message: 'Admin access required' });
     req.user = decoded;
     next();
   } catch (err) {
-    console.error('User auth error:', err);
     res.status(401).json({ message: 'Invalid token' });
   }
 };
 
-// CREATE USER
-router.post('/', async (req, res) => {
+const authenticatePrivileged = (req, res, next) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) return res.status(401).json({ message: 'No token provided' });
+  try {
+    const decoded = jwt.verify(token, SECRET);
+    if (decoded.role !== 'admin' && decoded.role !== 'archiviste') return res.status(403).json({ message: 'Access denied' });
+    req.user = decoded;
+    next();
+  } catch (err) {
+    res.status(401).json({ message: 'Invalid token' });
+  }
+};
+
+// CREATE USER (admin only)
+router.post('/', authenticateAdmin, async (req, res) => {
   const { username, full_name, service_code, role, password } = req.body;
+  if (!username || !full_name || !service_code || !role || !password) {
+    return res.status(400).json({ message: 'All fields are required' });
+  }
+  try {
+    const hash = await bcrypt.hash(password, 10);
+    db.query(
+      'INSERT INTO users (username, full_name, service_code, role, password) VALUES (?,?,?,?,?)',
+      [username, full_name, service_code, role, hash],
+      (err, result) => {
+        if (err) {
+          if (err.code === 'ER_DUP_ENTRY') return res.status(409).json({ message: 'Username already exists' });
+          return res.status(500).json({ error: err.message });
+        }
+        res.json({ message: 'User created', id: result.insertId });
+      }
+    );
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to create user' });
+  }
+});
 
-  const hash = await bcrypt.hash(password, 10);
-
-  db.query(
-    'INSERT INTO users (username, full_name, service_code, role, password) VALUES (?,?,?,?,?)',
-    [username, full_name, service_code, role, hash],
-    (err) => {
-      if (err) return res.json(err);
-      res.json({ message: "User created" });
-    }
-  );
+// DELETE USER (admin only)
+router.delete('/:id', authenticateAdmin, (req, res) => {
+  const { id } = req.params;
+  db.query('DELETE FROM users WHERE id = ?', [id], (err, result) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (result.affectedRows === 0) return res.status(404).json({ message: 'User not found' });
+    res.json({ message: 'User deleted' });
+  });
 });
 
 // GET ALL USERS (public - for login dropdown)
@@ -61,8 +88,8 @@ router.get('/public', (req, res) => {
   );
 });
 
-// GET ALL USERS (admin only)
-router.get('/', authenticateAdmin, (req, res) => {
+// GET ALL USERS (admin or archiviste)
+router.get('/', authenticatePrivileged, (req, res) => {
   db.query(
     'SELECT id, username, full_name, service_code, role FROM users ORDER BY full_name',
     (err, results) => {

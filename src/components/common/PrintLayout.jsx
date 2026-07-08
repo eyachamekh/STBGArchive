@@ -7,8 +7,6 @@ const PrintLayout = ({ demande }) => {
 
   if (!demande) return null;
 
-  const col = '#c8102e';
-
   const destFmt = demande.destFmt && demande.destFmt !== '—'
     ? formatDate(demande.destFmt)
     : demande.destRaw ? formatDate(demande.destRaw) : '—';
@@ -21,11 +19,11 @@ const PrintLayout = ({ demande }) => {
   return (
     <div id="print-zone" className="show">
       <div className="etiq-outer">
-        <div style={{ fontSize: '11px', color: '#666', textAlign: 'center', fontFamily: "'DM Mono',monospace", marginBottom: '4mm' }}>
+        <div className="etiq-caption">
           ① ÉTIQUETTE DOS DE BOÎTE — Coller sur le dos (tranche visible sur étagère)
         </div>
         <div className="etiq-vertical">
-          <div className="etiq-top-band" style={{ background: col }}>{demande.svc}</div>
+          <div className="etiq-top-band">{demande.svc}</div>
           <div className="etiq-logo-zone">
             <div className="etiq-logo-circle"><img src="/logo-stbg.jpg" alt="STBG Logo" className="etiq-logo-img" /></div>
             <div>
@@ -40,14 +38,14 @@ const PrintLayout = ({ demande }) => {
           <div className="etiq-body">
             <div className="ef-row"><div className="ef-lbl">Type de Documents</div><div className="ef-val big">{demande.type}</div></div>
             <div className="ef-row"><div className="ef-lbl">Service</div><div className="ef-val">{demande.svc}</div></div>
-            <div className="ef-row" style={{ display: 'flex', gap: '3mm' }}>
-              <div className="ef-row" style={{ flex: 1, margin: 0 }}>
+            <div className="ef-row ef-row-flex">
+              <div className="ef-row ef-row-half">
                 <div className="ef-lbl">Date Début</div>
-                <div className="ef-val" style={{ fontSize: '9px' }}>{formatDate(demande.dd)}</div>
+                <div className="ef-val ef-val-sm">{formatDate(demande.dd)}</div>
               </div>
-              <div className="ef-row" style={{ flex: 1, margin: 0 }}>
+              <div className="ef-row ef-row-half">
                 <div className="ef-lbl">Date Fin</div>
-                <div className="ef-val" style={{ fontSize: '9px' }}>{formatDate(demande.df)}</div>
+                <div className="ef-val ef-val-sm">{formatDate(demande.df)}</div>
               </div>
             </div>
             {hasRefs && (
@@ -65,8 +63,8 @@ const PrintLayout = ({ demande }) => {
                 </div>
               </div>
             )}
-            <div className="ef-row"><div className="ef-lbl">Local d'Archives</div><div className="ef-val" style={{ fontWeight: 800 }}>{demande.local}</div></div>
-            <div className="ef-row"><div className="ef-lbl">Conservation légale</div><div className="ef-val" style={{ color: '#b77700', fontWeight: 800 }}>{demande.delai}</div></div>
+            <div className="ef-row"><div className="ef-lbl">Local d'Archives</div><div className="ef-val ef-val-bold">{demande.local}</div></div>
+            <div className="ef-row"><div className="ef-lbl">Conservation légale</div><div className="ef-val ef-val-warn">{demande.delai}</div></div>
             <div className="etiq-dest">
               <div className="etiq-dest-lbl">⚠ Destruction prévue</div>
               <div className="etiq-dest-date">{destFmt}</div>
@@ -83,19 +81,9 @@ const PrintLayout = ({ demande }) => {
         </div>
       </div>
 
-      <div style={{ textAlign: 'center', marginTop: '14px', display: 'flex', gap: '10px', justifyContent: 'center' }} className="no-print">
-        <button
-          onClick={() => setPrintDemande(null)}
-          style={{ background: '#111', color: 'white', border: 'none', padding: '9px 20px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontFamily: "'Syne',sans-serif", fontWeight: 700 }}
-        >
-          ✕ Fermer
-        </button>
-        <button
-          onClick={() => window.print()}
-          style={{ background: '#c8102e', color: 'white', border: 'none', padding: '9px 20px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontFamily: "'Syne',sans-serif", fontWeight: 700 }}
-        >
-          🖨 Imprimer A4
-        </button>
+      <div className="print-btns no-print">
+        <button className="print-btn-close" onClick={() => setPrintDemande(null)}>✕ Fermer</button>
+        <button className="print-btn-print" onClick={() => window.print()}>🖨 Imprimer A4</button>
       </div>
     </div>
   );

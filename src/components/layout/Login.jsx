@@ -44,9 +44,6 @@ const Login = () => {
 
   const handleLogin = async () => {
     setErr('');
-    let backendAvailable = false;
-    let selectedUser = users.find(u => u.id === uid);
-    const isAdminUser = selectedUser?.role === 'admin';
 
     try {
       const res = await fetch('http://localhost:3000/api/auth/login', {
@@ -60,31 +57,19 @@ const Login = () => {
         if (data.user && data.token) {
           localStorage.setItem('token', data.token);
           const success = await login(uid, pass, data.user.id, data.user);
-          if (!success) setErr('Échec de la connexion backend.');
+          if (!success) setErr('Échec de la connexion.');
           return;
         }
       }
 
-      backendAvailable = true;
       if (res.status === 401 || res.status === 403) {
         setErr('Identifiants invalides ou accès refusé.');
         return;
       }
+      setErr('Erreur lors de la connexion.');
     } catch (error) {
-      // backend unavailable, fall through to local auth
-    }
-
-    if (isAdminUser) {
-      setErr('Connexion admin impossible : utilisez le compte admin backend valide.');
-      return;
-    }
-
-    if (!backendAvailable) {
       localStorage.removeItem('token');
-      const success = await login(uid, pass);
-      if (!success) setErr('Mot de passe incorrect.');
-    } else {
-      setErr('Impossible de joindre le backend.');
+      setErr('Impossible de joindre le serveur backend.');
     }
   };
 

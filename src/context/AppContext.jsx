@@ -1,5 +1,4 @@
 import { createContext, useState, useEffect } from 'react';
-import { USERS } from '../data';
 
 export const AppContext = createContext();
 
@@ -53,9 +52,7 @@ export const AppProvider = ({ children }) => {
 
     const savedUser = localStorage.getItem('stbg_current_user');
     const token = localStorage.getItem('token');
-    const parsedUser = savedUser ? JSON.parse(savedUser) : null;
-    const localUser = parsedUser ? USERS.find(x => x.id === parsedUser.id) : null;
-    const restoredUser = parsedUser ? { ...localUser, ...parsedUser } : null;
+    const restoredUser = savedUser ? JSON.parse(savedUser) : null;
 
     if (token) {
       const restoreTokenSession = async () => {
@@ -223,9 +220,7 @@ export const AppProvider = ({ children }) => {
         dbId: dbId || backendUser.id,
       };
     } else {
-      const localUser = USERS.find(x => x.id === uid);
-      if (!localUser || localUser.pass !== pass) return false;
-      userData = { ...localUser, dbId };
+      return false;
     }
 
     setCurrentUser(userData);
