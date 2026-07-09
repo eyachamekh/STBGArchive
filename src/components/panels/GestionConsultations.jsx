@@ -1,9 +1,13 @@
 import { useContext, useState, useEffect } from 'react';
 import { AppContext } from '../../context/AppContext';
+import Pagination from '../common/Pagination';
+
+const ITEMS_PER_PAGE = 15;
 
 const GestionConsultations = () => {
   const { currentUser, consultations, updateConsultationStatus } = useContext(AppContext);
   const [tab, setTab] = useState(() => localStorage.getItem('gestionConsultationsTab') || 'pending');
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     localStorage.setItem('gestionConsultationsTab', tab);
@@ -15,7 +19,9 @@ const GestionConsultations = () => {
   const [retourId, setRetourId] = useState(null);
   const [retourEtat, setRetourEtat] = useState('Bon état');
 
-  const list = consultations.filter(c => c.statut === tab && (currentUser?.role === 'admin' || currentUser?.role === 'archiviste' || c.uid === currentUser?.id));
+  const allList = consultations.filter(c => c.statut === tab && (currentUser?.role === 'admin' || currentUser?.role === 'archiviste' || c.uid === currentUser?.id));
+  const totalPages = Math.ceil(allList.length / ITEMS_PER_PAGE);
+  const list = allList.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
   
   const fmtDate = (s) => {
     if (!s || s.length < 8) return s || '—';
@@ -111,6 +117,7 @@ const GestionConsultations = () => {
             )}
           </tbody>
         </table>
+        <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
       </div>
 
       {remiseId && activeConsult && (

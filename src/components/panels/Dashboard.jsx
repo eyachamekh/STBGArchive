@@ -1,9 +1,14 @@
-import { useContext } from 'react';
+import { useContext, useState } from 'react';
 import { AppContext } from '../../context/AppContext';
 import { DUP_RULES } from '../../utils/constants';
+import Pagination from '../common/Pagination';
+
+const ITEMS_PER_PAGE = 10;
 
 const Dashboard = () => {
   const { currentUser, setActivePanel, demandes, consultations, setPrintDemande } = useContext(AppContext);
+  const [pageDemandes, setPageDemandes] = useState(1);
+  const [pageConsultations, setPageConsultations] = useState(1);
 
   const r = currentUser.role;
   const total = demandes.length;
@@ -23,10 +28,14 @@ const Dashboard = () => {
   }
 
   const src = r === 'service' ? mine : demandes;
-  const last = [...src].reverse().slice(0, 10);
+  const allDemandes = [...src].reverse();
+  const totalPagesDemandes = Math.ceil(allDemandes.length / ITEMS_PER_PAGE);
+  const last = allDemandes.slice((pageDemandes - 1) * ITEMS_PER_PAGE, pageDemandes * ITEMS_PER_PAGE);
 
   const csrc = (r === 'archiviste' || r === 'admin') ? consultations : mconsult;
-  const activeConsults = csrc.filter(c => c.statut !== 'cloture');
+  const allActiveConsults = csrc.filter(c => c.statut !== 'cloture');
+  const totalPagesConsultations = Math.ceil(allActiveConsults.length / ITEMS_PER_PAGE);
+  const activeConsults = allActiveConsults.slice((pageConsultations - 1) * ITEMS_PER_PAGE, pageConsultations * ITEMS_PER_PAGE);
 
   const fmtDate = (s) => {
     if (!s || s.length < 8) return s || '—';
@@ -88,7 +97,7 @@ const Dashboard = () => {
 
       <div className="tw">
         <div className="twh">
-          <div><div className="twt">Dernières Demandes d'Archivage</div><div className="tws">10 dernières soumissions</div></div>
+          <div><div className="twt">Dernières Demandes d'Archivage</div><div className="tws">{allDemandes.length} soumission(s)</div></div>
           {r === 'service' && <button className="btn bp2 bsm" onClick={() => setActivePanel('nouvelle')}>+ Nouvelle</button>}
         </div>
         <table>
@@ -113,28 +122,34 @@ const Dashboard = () => {
             )}
           </tbody>
         </table>
+        <Pagination currentPage={pageDemandes} totalPages={totalPagesDemandes} onPageChange={setPageDemandes} />
       </div>
 
       {activeConsults.length > 0 && (
         <div className="tw">
-          <div className="twh"><div className="twt">Consultations en Cours</div></div>
+          <div className="twh"><div className="twt">Consultations en Cours</div><div className="tws">{allActiveConsults.length} consultation(s)</div></div>
           <table>
             <thead>
               <tr><th>N° Demande</th><th>Demandeur</th><th>Boîtes demandées</th><th>Date</th><th>Statut</th><th></th></tr>
             </thead>
             <tbody>
-              {activeConsults.map(c => (
-                <tr key={c.id}>
-                  <td><span className="ref-mono">{c.ref}</span></td>
-                  <td className="tdm">{c.nom}</td>
-                  <td>{c.boites.map(b => <span key={b.id} className="badge by m-1">{b.ref}</span>)}</td>
-                  <td className="fs-10 mono">{c.created}</td>
-                  <td>{cStatutBadge(c.statut)}</td>
-                  <td></td>
-                </tr>
-              ))}
+              {!activeConsults.length ? (
+                <tr><td colSpan="6" className="empty-row-lg">Aucune consultation en cours.</td></tr>
+              ) : (
+                activeConsults.map(c => (
+                  <tr key={c.id}>
+                    <td><span className="ref-mono">{c.ref}</span></td>
+                    <td className="tdm">{c.nom}</td>
+                    <td>{c.boites.map(b => <span key={b.id} className="badge by m-1">{b.ref}</span>)}</td>
+                    <td className="fs-10 mono">{c.created}</td>
+                    <td>{cStatutBadge(c.statut)}</td>
+                    <td></td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
+          <Pagination currentPage={pageConsultations} totalPages={totalPagesConsultations} onPageChange={setPageConsultations} />
         </div>
       )}
     </div>

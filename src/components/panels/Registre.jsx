@@ -1,10 +1,14 @@
 import { useContext, useState } from 'react';
 import { AppContext } from '../../context/AppContext';
+import Pagination from '../common/Pagination';
+
+const ITEMS_PER_PAGE = 15;
 
 const Registre = () => {
   const { demandes, setPrintDemande } = useContext(AppContext);
   const [filter, setFilter] = useState('');
   const [showDestroyed, setShowDestroyed] = useState(false);
+  const [page, setPage] = useState(1);
 
   const today = new Date();
 
@@ -21,7 +25,9 @@ const Registre = () => {
     d.type.toLowerCase().includes(filter.toLowerCase())
   );
 
-  const list = (showDestroyed ? baseList.filter(isDestroyed) : baseList.filter(d => !isDestroyed(d))).slice().reverse();
+  const allList = (showDestroyed ? baseList.filter(isDestroyed) : baseList.filter(d => !isDestroyed(d))).slice().reverse();
+  const totalPages = Math.ceil(allList.length / ITEMS_PER_PAGE);
+  const list = allList.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
   const destroyedCount = demandes.filter(isDestroyed).length;
 
   const fmtDate = (s) => {
@@ -104,6 +110,7 @@ const Registre = () => {
             )}
           </tbody>
         </table>
+        <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
       </div>
     </div>
   );

@@ -1,17 +1,24 @@
 import { useContext, useState } from 'react';
 import { AppContext } from '../../context/AppContext';
+import Pagination from '../common/Pagination';
+
+const ITEMS_PER_PAGE = 15;
 
 const MesDemandes = () => {
   const { currentUser, demandes, setPrintDemande, setEditRequest, setActivePanel, demandeFilter, setDemandeFilter, openDemandeId, setOpenDemandeId } = useContext(AppContext);
   const [filter, setFilter] = useState('');
+  const [page, setPage] = useState(1);
 
   if (!currentUser) return null;
 
-  const mine = demandes.filter(d => 
+  const allMine = demandes.filter(d => 
     d.uid === currentUser.id && 
     (demandeFilter === 'all' || d.statut === demandeFilter) &&
     (!filter || d.ref.toLowerCase().includes(filter.toLowerCase()) || d.type.toLowerCase().includes(filter.toLowerCase()))
   ).slice().reverse();
+
+  const totalPages = Math.ceil(allMine.length / ITEMS_PER_PAGE);
+  const mine = allMine.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
   const fmtDate = (s) => {
     if (!s || s.length < 8) return s || '—';
@@ -93,6 +100,7 @@ const MesDemandes = () => {
             )}
           </tbody>
         </table>
+        <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
       </div>
 
       {openDemandeId && (

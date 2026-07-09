@@ -1,5 +1,8 @@
 import { useContext, useState, useEffect } from 'react';
 import { AppContext } from '../../context/AppContext';
+import Pagination from '../common/Pagination';
+
+const ITEMS_PER_PAGE = 15;
 
 const MOTIF_REASONS = [
   'Référence manquante',
@@ -26,6 +29,7 @@ const Validation = () => {
   const myRejected = !isPrivileged ? demandes.filter(d => isOwner(d) && d.statut === 'rejected') : [];
 
   const [tab, setTab] = useState('pending');
+  const [page, setPage] = useState(1);
   const [rejectId, setRejectId] = useState(null);
   const [rejectDem, setRejectDem] = useState(null);
   const [selectedReason, setSelectedReason] = useState('');
@@ -46,7 +50,9 @@ const Validation = () => {
     }
   }, [myRejected.length]);
 
-  const list = demandes.filter(d => d.statut === tab && isOwner(d));
+  const allList = demandes.filter(d => d.statut === tab && isOwner(d));
+  const totalPages = Math.ceil(allList.length / ITEMS_PER_PAGE);
+  const list = allList.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
   const fmtDate = (s) => {
     if (!s || s.length < 8) return s || '—';
@@ -175,6 +181,7 @@ const Validation = () => {
             )}
           </tbody>
         </table>
+        <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
       </div>
 
       {validateId && (

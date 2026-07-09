@@ -1,5 +1,8 @@
 import { useContext, useState } from 'react';
 import { AppContext } from '../../context/AppContext';
+import Pagination from '../common/Pagination';
+
+const ITEMS_PER_PAGE = 15;
 
 const Destruction = () => {
   const { currentUser, demandes, updateDemandeStatus, removeDemande, addNotif } = useContext(AppContext);
@@ -11,17 +14,25 @@ const Destruction = () => {
   const [pvRef, setPvRef] = useState('');
   const [showDestroyedList, setShowDestroyedList] = useState(false);
   const [viewPvArchive, setViewPvArchive] = useState(null);
+  const [pageEligible, setPageEligible] = useState(1);
+  const [pageDestroyed, setPageDestroyed] = useState(1);
 
   const today = new Date();
 
-  const eligible = demandes.filter(d =>
+  const allEligible = demandes.filter(d =>
     d.statut === 'validated' &&
     d.destRaw &&
     d.delai !== 'Permanent' &&
     new Date(d.destRaw) <= today
   );
 
-  const destroyedArchives = demandes.filter(d => d.statut === 'destroyed' || d.statut === 'détruite');
+  const allDestroyedArchives = demandes.filter(d => d.statut === 'destroyed' || d.statut === 'détruite');
+
+  const totalPagesEligible = Math.ceil(allEligible.length / ITEMS_PER_PAGE);
+  const eligible = allEligible.slice((pageEligible - 1) * ITEMS_PER_PAGE, pageEligible * ITEMS_PER_PAGE);
+
+  const totalPagesDestroyed = Math.ceil(allDestroyedArchives.length / ITEMS_PER_PAGE);
+  const destroyedArchives = allDestroyedArchives.slice((pageDestroyed - 1) * ITEMS_PER_PAGE, pageDestroyed * ITEMS_PER_PAGE);
 
   const fmtDate = (s) => {
     if (!s || s.length < 8) return s || '—';
@@ -66,12 +77,12 @@ const Destruction = () => {
         >
           📋 Éligibles à la destruction ({eligible.length})
         </button>
-        <button
-          className={`btn bsm ${showDestroyedList ? 'bdanger' : 'bg2'}`}
-          onClick={() => setShowDestroyedList(true)}
-        >
-          ⊘ Archives Détruites ({destroyedArchives.length})
-        </button>
+          <button
+            className={`btn bsm ${showDestroyedList ? 'bdanger' : 'bg2'}`}
+            onClick={() => setShowDestroyedList(true)}
+          >
+            ⊘ Archives Détruites ({allDestroyedArchives.length})
+          </button>
       </div>
 
       {showDestroyedList ? (
@@ -79,7 +90,7 @@ const Destruction = () => {
           <div className="twh">
             <div>
               <div className="twt">Registre des Archives Détruites</div>
-              <div className="tws">{destroyedArchives.length} archive(s) physiquement éliminée(s)</div>
+              <div className="tws">{allDestroyedArchives.length} archive(s) physiquement éliminée(s)</div>
             </div>
           </div>
           <table>
@@ -117,19 +128,20 @@ const Destruction = () => {
               )}
             </tbody>
           </table>
+          <Pagination currentPage={pageDestroyed} totalPages={totalPagesDestroyed} onPageChange={setPageDestroyed} />
         </div>
       ) : (
         <div className="tw">
           <div className="twh">
             <div>
               <div className="twt">Documents Éligibles à la Destruction</div>
-              <div className="tws">{eligible.length} archive(s) dont la date de destruction est dépassée</div>
+              <div className="tws">{allEligible.length} archive(s) dont la date de destruction est dépassée</div>
             </div>
-            {isAdmin && eligible.length > 0 && (
+            {isAdmin && allEligible.length > 0 && (
               <button className="btn bdanger bsm" onClick={() => {
                 setShowPV(true);
                 setPvRef(`PV-DEST-${new Date().getFullYear()}-${String(Date.now()).slice(-4)}`);
-                if (selected.length === 0) setSelected(eligible.map(d => d.id));
+                if (selected.length === 0) setSelected(allEligible.map(d => d.id));
               }}>
                 📄 Générer PV
               </button>
@@ -138,7 +150,7 @@ const Destruction = () => {
           <table>
             <thead>
               <tr>
-                {isAdmin && <th><input type="checkbox" checked={selected.length === eligible.length && eligible.length > 0} onChange={toggleAll} /></th>}
+                {isAdmin && <th><input type="checkbox" checked={selected.length === allEligible.length && allEligible.length > 0} onChange={toggleAll} /></th>}
                 <th>Référence</th><th>Type Document</th><th>Service</th><th>Période</th><th>Délai</th><th>Dépassement</th><th>Local</th>
               </tr>
             </thead>
@@ -163,6 +175,7 @@ const Destruction = () => {
               )}
             </tbody>
           </table>
+          <Pagination currentPage={pageEligible} totalPages={totalPagesEligible} onPageChange={setPageEligible} />
         </div>
       )}
 
