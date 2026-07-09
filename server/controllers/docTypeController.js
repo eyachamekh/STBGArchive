@@ -2,13 +2,11 @@ const db = require('../db');
 
 // GET ALL DOCUMENT TYPES
 exports.getDocumentTypes = (req, res) => {
-  console.log('GET / request received in document_types route');
   db.query('SELECT * FROM document_types ORDER BY service_code, document_name', (err, result) => {
     if (err) {
       console.error('Database error in GET /:', err);
       return res.status(500).json(err);
     }
-    console.log(`Returning ${result.length} document types`);
     res.json(result);
   });
 };

@@ -86,10 +86,6 @@ exports.createArchive = (req, res) => {
     boites_details
   } = req.body;
 
-  console.log('Archive POST request received:', {
-    ref, service_code, user_id, document_type, date_debut, date_fin,
-    delai_legale, date_destruction_prevue, boites, local_destination
-  });
 
   if (!ref || !service_code || !user_id || !document_type || !date_debut || !date_fin) {
     console.log('Missing required fields:', {

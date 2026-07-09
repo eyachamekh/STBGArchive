@@ -3,6 +3,7 @@ import './App.css';
 import { AppContext } from './context/AppContext';
 import Login from './components/layout/Login';
 import AppShell from './components/layout/AppShell';
+import ForceChangePassword from './components/layout/ForceChangePassword';
 import PrintLayout from './components/common/PrintLayout';
 
 function App() {
@@ -11,7 +12,13 @@ function App() {
   return (
     <>
       <PrintLayout demande={printDemande} />
-      {!currentUser ? <Login /> : <AppShell />}
+      {!currentUser ? (
+        <Login />
+      ) : currentUser.mustChangePassword ? (
+        <ForceChangePassword />
+      ) : (
+        <AppShell />
+      )}
     </>
   );
 }

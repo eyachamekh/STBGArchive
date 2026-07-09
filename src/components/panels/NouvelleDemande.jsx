@@ -2,7 +2,7 @@ import { useContext, useState, useEffect } from 'react';
 import { AppContext } from '../../context/AppContext';
 
 const NouvelleDemande = () => {
-  const { currentUser, demandes, addDemande, setPrintDemande, editRequest, setEditRequest, setActivePanel } = useContext(AppContext);
+  const { currentUser, demandes, addDemande, setPrintDemande, editRequest, setEditRequest, setActivePanel, fetchWithAuth } = useContext(AppContext);
 
   const [typeVal, setTypeVal] = useState('');
   const [editMode, setEditMode] = useState(false);
@@ -51,9 +51,18 @@ const NouvelleDemande = () => {
   const fetchDocumentTypes = async () => {
     try {
       if (!currentUser) return;
-      const res = await fetch('http://localhost:3000/api/document-types');
+      const res = await fetchWithAuth('http://localhost:3000/api/document-types');
       const data = await res.json();
-      setDocs(data.filter(d => d.service_code === currentUser.code));
+      const filtered = data.filter(d => d.service_code === currentUser.code);
+      const unique = [];
+      const seen = new Set();
+      for (const d of filtered) {
+        if (!seen.has(d.document_name)) {
+          seen.add(d.document_name);
+          unique.push(d);
+        }
+      }
+      setDocs(unique);
       setLoading(false);
     } catch (err) {
       console.error('Error fetching document types:', err);
@@ -186,7 +195,7 @@ const NouvelleDemande = () => {
         requestBody.user_id = currentUser.dbId || currentUser.id;
       }
 
-      const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestBody) });
+      const res = await fetchWithAuth(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestBody) });
 
       if (!res.ok) {
         const ct = res.headers.get('content-type');

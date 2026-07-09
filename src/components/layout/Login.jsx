@@ -18,11 +18,11 @@ const Login = () => {
           const dbUsers = await res.json();
           const formattedUsers = dbUsers.map(u => ({
             id: u.username,
-            name: u.name,
-            svc: u.svc,
-            role: u.role,
-            code: u.code,
-            dbId: u.id
+            name: u.username,
+            svc: '',
+            role: '',
+            code: '',
+            dbId: null
           }));
           setUsers(formattedUsers);
           if (formattedUsers.length > 0) {
@@ -89,7 +89,7 @@ const Login = () => {
           <label>Compte utilisateur</label>
           <select value={uid} onChange={e => setUid(e.target.value)}>
             {users.map(u => (
-              <option key={u.id} value={u.id}>{u.name} ({u.svc})</option>
+              <option key={u.id} value={u.id}>{u.name}</option>
             ))}
           </select>
         </div>

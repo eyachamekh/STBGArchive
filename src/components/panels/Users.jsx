@@ -41,14 +41,6 @@ const Users = () => {
         setLoadError(null);
         return;
       }
-      if (res.status === 401 || res.status === 403) {
-        const fallback = await fetch('http://localhost:3000/api/users/public');
-        if (fallback.ok) {
-          const users = await fallback.json();
-          setUserList(users);
-          return;
-        }
-      }
       setUserList([]);
       setLoadError('Impossible de charger la liste des utilisateurs.');
     } catch (err) {
@@ -109,7 +101,7 @@ const Users = () => {
       addNotif('error', 'Réinitialisation impossible', 'Connectez-vous en tant qu\'administrateur backend.');
       return;
     }
-    const newPassword = window.prompt(`Réinitialiser le mot de passe de ${user.name} :`, 'stbg2025');
+    const newPassword = window.prompt(`Réinitialiser le mot de passe de ${user.name} (Requis: min 8 caractères, majuscule, minuscule, chiffre, caractère spécial) :`, '');
     if (!newPassword) return;
     try {
       const res = await fetchWithAuth(`http://localhost:3000/api/users/${user.id}/reset`, {
@@ -199,7 +191,7 @@ const Users = () => {
               </div>
               <div className="fgrp">
                 <div className="flbl">Mot de passe *</div>
-                <input className="finp" type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} placeholder="Minimum 4 caractères" />
+                <input className="finp" type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} placeholder="Mot de passe fort (ex: User@123Stbg!)" />
               </div>
               <div className="fgrp full">
                 <div className="flbl">Nom complet *</div>

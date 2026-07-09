@@ -21,21 +21,42 @@ export const AppProvider = ({ children }) => {
     return token ? { Authorization: `Bearer ${token}` } : {};
   };
 
-  const fetchWithAuth = (url, options = {}) => {
-    return fetch(url, {
+  const fetchWithAuth = async (url, options = {}) => {
+    const res = await fetch(url, {
       ...options,
       headers: {
         ...options.headers,
         ...getAuthHeaders(),
       },
     });
+
+    if (res.status === 403) {
+      try {
+        const clone = res.clone();
+        const data = await clone.json();
+        if (data.mustChangePassword) {
+          setCurrentUser(prev => {
+            if (prev && !prev.mustChangePassword) {
+              const updated = { ...prev, mustChangePassword: true };
+              localStorage.setItem('stbg_current_user', JSON.stringify(updated));
+              return updated;
+            }
+            return prev;
+          });
+        }
+      } catch (e) {
+        // Ignore response parse errors
+      }
+    }
+
+    return res;
   };
 
   async function restoreSession(savedUser) {
     const hasToken = !!localStorage.getItem('token');
     setCurrentUser(savedUser);
     setIsAuthenticatedBackend(!!savedUser?.dbId && hasToken);
-    if (savedUser?.dbId || hasToken) {
+    if ((savedUser?.dbId || hasToken) && !savedUser?.mustChangePassword) {
       await refreshDemandes(savedUser);
       await loadNotifications();
       await loadConsultations();
@@ -67,6 +88,7 @@ export const AppProvider = ({ children }) => {
               code: user.code,
               role: user.role,
               dbId: user.id,
+              mustChangePassword: user.mustChangePassword,
             };
             await restoreSession(restored);
             return;
@@ -218,6 +240,7 @@ export const AppProvider = ({ children }) => {
         code: backendUser.code,
         role: backendUser.role,
         dbId: dbId || backendUser.id,
+        mustChangePassword: backendUser.mustChangePassword,
       };
     } else {
       return false;
@@ -228,25 +251,29 @@ export const AppProvider = ({ children }) => {
     setActivePanel('dashboard');
     addNotif('info', 'Connexion', `Bienvenue ${userData.name} — ${userData.svc}`);
 
-    try {
-      const res = await fetchWithAuth('http://localhost:3000/api/archives');
-      if (res.ok) {
-        const archives = await res.json();
-        setDemandes(archives.map(a => mapArchive(a, [])));
-      }
+    // If password change is required, do not load data yet (endpoints will block it)
+    if (!userData.mustChangePassword) {
+      try {
+        const res = await fetchWithAuth('http://localhost:3000/api/archives');
+        if (res.ok) {
+          const archives = await res.json();
+          setDemandes(archives.map(a => mapArchive(a, [])));
+        }
 
-      if (dbId) {
-        await loadNotifications();
-        await loadConsultations();
+        if (dbId) {
+          await loadNotifications();
+          await loadConsultations();
+        }
+      } catch (err) {
+        console.error('Login load error:', err);
       }
-    } catch (err) {
-      console.error('Login load error:', err);
     }
 
     return true;
   };
 
   const refreshDemandes = async (u) => {
+    if (u.mustChangePassword) return; // Prevent request
     try {
       const isPrivileged = u.role === 'admin' || u.role === 'archiviste';
       const url = isPrivileged
@@ -271,6 +298,16 @@ export const AppProvider = ({ children }) => {
     setLocalNotifs([]);
     setServerNotifs([]);
     setActivePanel('dashboard');
+  };
+
+  const changePasswordSuccess = (newToken) => {
+    localStorage.setItem('token', newToken);
+    setCurrentUser(prev => {
+      const updated = { ...prev, mustChangePassword: false };
+      localStorage.setItem('stbg_current_user', JSON.stringify(updated));
+      return updated;
+    });
+    addNotif('success', 'Sécurité', 'Votre mot de passe a été mis à jour avec succès.');
   };
 
   const checkDups = (dem) => {
@@ -439,7 +476,7 @@ export const AppProvider = ({ children }) => {
 
   return (
     <AppContext.Provider value={{
-      currentUser, login, logout,
+      currentUser, login, logout, changePasswordSuccess,
       activePanel, setActivePanel,
       demandes, addDemande, updateDemandeStatus, removeDemande,
       refreshDemandes,

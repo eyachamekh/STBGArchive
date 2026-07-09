@@ -1,16 +1,22 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const rateLimit = require('express-rate-limit');
 
 const app = express();
 
-app.use(cors());
+// app.use(cors({ origin: ['https://archive.stbg.tn'] }));
+app.use(cors({ origin: ['https://archive.stbg.tn', 'http://localhost:5174'] })); // http://localhost:5174' has been blocked by CORS policy
 app.use(express.json());
 
-// DEBUG: Log all requests
-app.use((req, res, next) => {
-  console.log('Incoming request:', req.method, req.path);
-  next();
+// Configuration du rate limiting pour le login (10 essais / 15 minutes)
+const loginLimit = rateLimit({
+  windowMs: 15 * 60 * 1000, max: 10,
+  message: { message: "Trop de tentatives de connexion. Veuillez réessayer dans 15 minutes." }
 });
+
+app.use('/api/auth/login', loginLimit);
+
 
 // TEST ENDPOINT
 app.get('/api/test', (req, res) => {
@@ -29,13 +35,21 @@ const docTypesRouter = require('./routes/document_types');
 console.log('Document types router loaded:', typeof docTypesRouter);
 app.use('/api/document-types', docTypesRouter);
 
-// Error handler middleware - must be last
+// Error handler middleware
 app.use((err, req, res, next) => {
   console.error('Error:', err.message || err);
-  res.status(err.status || 500).json({ 
-    error: err.message || 'Internal Server Error',
-    details: process.env.NODE_ENV === 'development' ? err.stack : undefined
-  });
+  const status = err.status || 500;
+  
+  if (process.env.NODE_ENV === 'development') {
+    res.status(status).json({ 
+      error: err.message || 'Internal Server Error',
+      details: err.stack
+    });
+  } else {
+    res.status(status).json({ 
+      error: 'Internal Server Error'
+    });
+  }
 });
 
 // 404 handler

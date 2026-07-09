@@ -31,7 +31,7 @@ exports.login = (req, res) => {
         }
 
         const token = jwt.sign(
-          { id: user.id, username: user.username, role: user.role },
+          { id: user.id, username: user.username, role: user.role, mustChangePassword: !!user.must_change_password },
           SECRET,
           { expiresIn: '7d' }
         );
@@ -42,7 +42,8 @@ exports.login = (req, res) => {
           name: user.full_name,
           svc: user.service_name,
           code: user.service_code,
-          role: user.role
+          role: user.role,
+          mustChangePassword: !!user.must_change_password
         };
 
         res.json({ token, user: userInfo });
@@ -84,7 +85,8 @@ exports.getMe = (req, res) => {
           name: user.full_name,
           svc: user.service_name,
           code: user.service_code,
-          role: user.role
+          role: user.role,
+          mustChangePassword: !!user.must_change_password
         };
 
         res.json(userInfo);

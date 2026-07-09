@@ -29,6 +29,17 @@ db.getConnection((err, connection) => {
   }
   if (connection) {
     console.log("MySQL Connected via Pool");
+    db.query(`ALTER TABLE users ADD COLUMN must_change_password TINYINT(1) DEFAULT 1`, (alterErr) => {
+      if (alterErr) {
+        if (alterErr.errno === 1060 || alterErr.code === 'ER_DUP_COLUMN_NAME') {
+          // Column already exists
+        } else {
+          console.error("Migration error (adding must_change_password):", alterErr.message);
+        }
+      } else {
+        console.log("Migration: Added must_change_password column to users table");
+      }
+    });
     connection.release();
   }
 });

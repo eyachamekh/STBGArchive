@@ -31,6 +31,7 @@ db.connect((err) => {
         service_code VARCHAR(10) NOT NULL,
         role VARCHAR(20) NOT NULL,
         password VARCHAR(255) NOT NULL,
+        must_change_password TINYINT(1) DEFAULT 1,
         FOREIGN KEY (service_code) REFERENCES services(code)
     );
 

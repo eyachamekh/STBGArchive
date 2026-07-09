@@ -1,5 +1,9 @@
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 const db = require('../db');
+const { validatePassword } = require('../utils/passwordValidator');
+
+const SECRET = process.env.JWT_SECRET || "stbg_secret_key";
 
 // CREATE USER (admin only)
 exports.createUser = async (req, res) => {
@@ -7,10 +11,16 @@ exports.createUser = async (req, res) => {
   if (!username || !full_name || !service_code || !role || !password) {
     return res.status(400).json({ message: 'All fields are required' });
   }
+
+  const validation = validatePassword(password);
+  if (!validation.isValid) {
+    return res.status(400).json({ message: validation.message });
+  }
+
   try {
     const hash = await bcrypt.hash(password, 10);
     db.query(
-      'INSERT INTO users (username, full_name, service_code, role, password) VALUES (?,?,?,?,?)',
+      'INSERT INTO users (username, full_name, service_code, role, password, must_change_password) VALUES (?,?,?,?,?,1)',
       [username, full_name, service_code, role, hash],
       (err, result) => {
         if (err) {
@@ -38,19 +48,14 @@ exports.deleteUser = (req, res) => {
 // GET ALL USERS (public - for login dropdown)
 exports.getPublicUsers = (req, res) => {
   db.query(
-    'SELECT u.id, u.username, u.full_name, s.service_name, u.service_code, u.role FROM users u LEFT JOIN services s ON u.service_code = s.code ORDER BY u.full_name',
+    'SELECT username FROM users ORDER BY username',
     (err, results) => {
       if (err) {
         console.error('Error fetching public users:', err);
         return res.status(500).json({ error: err.message });
       }
       const users = results.map(u => ({
-        id: u.id,
-        username: u.username,
-        name: u.full_name,
-        svc: u.service_name,
-        code: u.service_code,
-        role: u.role
+        username: u.username
       }));
       res.json(users);
     }
@@ -87,11 +92,11 @@ exports.resetPassword = async (req, res) => {
   console.log('=== PASSWORD RESET REQUEST ===');
   console.log('User ID from params:', id);
   console.log('New password provided:', !!newPassword);
-  console.log('New password length:', newPassword ? newPassword.length : 0);
 
-  if (!newPassword || newPassword.length < 4) {
-    console.log('Password validation failed');
-    return res.status(400).json({ message: 'New password is required and must be at least 4 characters long' });
+  const validation = validatePassword(newPassword);
+  if (!validation.isValid) {
+    console.log('Password validation failed:', validation.message);
+    return res.status(400).json({ message: validation.message });
   }
 
   try {
@@ -99,13 +104,11 @@ exports.resetPassword = async (req, res) => {
     console.log('Password hashed successfully');
     console.log('Updating user ID in database:', id);
 
-    db.query('UPDATE users SET password = ? WHERE id = ?', [hash, id], (err, result) => {
+    db.query('UPDATE users SET password = ?, must_change_password = 1 WHERE id = ?', [hash, id], (err, result) => {
       if (err) {
         console.error('Database error updating password:', err);
         return res.status(500).json({ error: err.message });
       }
-      console.log('Database update result:', result);
-      console.log('Affected rows:', result.affectedRows);
       if (result.affectedRows === 0) {
         console.log('No user found with ID:', id);
         return res.status(404).json({ message: 'User not found' });
@@ -114,7 +117,7 @@ exports.resetPassword = async (req, res) => {
 
       db.query(
         'INSERT INTO notifications (user_id, type, title, message, meta) VALUES (?, ?, ?, ?, ?)',
-        [id, 'info', 'Réinitialisation de mot de passe', 'Votre mot de passe a été réinitialisé par l’administrateur.', JSON.stringify({ action: 'password-reset' })],
+        [id, 'info', 'Réinitialisation de mot de passe', 'Votre mot de passe a été réinitialisé par l’administrateur. Veuillez le modifier à votre prochaine connexion.', JSON.stringify({ action: 'password-reset' })],
         (notifErr) => {
           if (notifErr) {
             console.error('Error creating password reset notification:', notifErr);
@@ -127,4 +130,54 @@ exports.resetPassword = async (req, res) => {
     console.error('Error hashing password:', hashErr);
     return res.status(500).json({ error: 'Failed to process password' });
   }
+};
+
+// CHANGE OWN PASSWORD
+exports.changePassword = async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  const userId = req.user.id;
+
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ message: 'L\'ancien et le nouveau mot de passe sont requis.' });
+  }
+
+  const validation = validatePassword(newPassword);
+  if (!validation.isValid) {
+    return res.status(400).json({ message: validation.message });
+  }
+
+  // Get current user's password hash from database
+  db.query('SELECT password FROM users WHERE id = ?', [userId], async (err, results) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (results.length === 0) return res.status(404).json({ message: 'Utilisateur non trouvé.' });
+
+    const user = results[0];
+    try {
+      const match = await bcrypt.compare(currentPassword, user.password);
+      if (!match) {
+        return res.status(400).json({ message: 'L\'ancien mot de passe est incorrect.' });
+      }
+
+      const hash = await bcrypt.hash(newPassword, 10);
+      db.query(
+        'UPDATE users SET password = ?, must_change_password = 0 WHERE id = ?',
+        [hash, userId],
+        (updateErr) => {
+          if (updateErr) return res.status(500).json({ error: updateErr.message });
+
+          // Generate new token without mustChangePassword constraint
+          const token = jwt.sign(
+            { id: req.user.id, username: req.user.username, role: req.user.role, mustChangePassword: false },
+            SECRET,
+            { expiresIn: '7d' }
+          );
+
+          res.json({ message: 'Mot de passe changé avec succès.', token });
+        }
+      );
+    } catch (processErr) {
+      console.error('Error changing password:', processErr);
+      return res.status(500).json({ error: 'Erreur lors du traitement du mot de passe.' });
+    }
+  });
 };

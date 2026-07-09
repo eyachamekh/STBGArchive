@@ -43,7 +43,7 @@ const Sidebar = () => {
         <div className="slbl">Archives</div>
         {(r === 'service' || r === 'archiviste') && <NavItem id="nouvelle" icon="＋" lbl="Nouvelle Demande" />}
         {(r === 'service' || r === 'archiviste') && <NavItem id="mes" icon="◧" lbl="Mes Demandes" badgeCount={mine} badgeClass="nb-g" />}
-        {(r === 'service' || r === 'archiviste') && <NavItem id="validation" icon="✓" lbl="Mes Validations" badgeCount={myRejected} badgeClass="nb-r" />}
+        {/* {(r === 'service' || r === 'archiviste') && <NavItem id="validation" icon="✓" lbl="Mes Validations" badgeCount={myRejected} badgeClass="nb-r" />} */}
         {(r === 'service' || r === 'archiviste') && <NavItem id="consultation" icon="📤" lbl="Demande de Consultation" />}
         {r === 'service' && <NavItem id="gestion-consult" icon="📋" lbl="Gestion Consultations" badgeCount={cpend} badgeClass="nb-b" />}
 

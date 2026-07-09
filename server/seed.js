@@ -3,7 +3,8 @@ const bcrypt = require('bcrypt');
 require('dotenv').config();
 
 const USERS = [
-  {id:'karim',   name:'Karim Sghaouria',  svc:'Audit',                  code:'AUD',role:'archiviste'},
+  {id:'archiviste', name:'Archiviste Central', svc:'Archive',            code:'ARC',role:'archiviste'},
+  {id:'karim',   name:'Karim Sghaouria',  svc:'Audit',                   code:'AUD',role:'archiviste'},
   {id:'admin',   name:'Administrateur',    svc:'Administration',         code:'ADM',role:'admin'},
   {id:'imen',    name:'Imen Ben Achour',   svc:'Comptabilité',           code:'CPT',role:'service'},
   {id:'sonia',   name:'Sonia Fligene',     svc:'Commercial',             code:'COM',role:'service'},
@@ -86,20 +87,28 @@ async function seed() {
   });
 
   // Seed Users
+  const seedAdminPassword = process.env.SEED_ADMIN_PASSWORD;
+  const seedArchivistePassword = process.env.SEED_ARCHIVISTE_PASSWORD;
+  const seedUserPasswordSuffix = process.env.SEED_USER_PASSWORD_SUFFIX;
+
+  if (!seedAdminPassword || !seedArchivistePassword || !seedUserPasswordSuffix) {
+    console.error("Erreur: Les variables d'environnement SEED_ADMIN_PASSWORD, SEED_ARCHIVISTE_PASSWORD et SEED_USER_PASSWORD_SUFFIX doivent être configurées.");
+    process.exit(1);
+  }
+
   for (let u of USERS) {
     let password;
     if (u.role === 'admin') {
-      password = process.env.SEED_ADMIN_PASSWORD || 'admin123';
+      password = seedAdminPassword;
     } else if (u.role === 'archiviste') {
-      password = process.env.SEED_ARCHIVISTE_PASSWORD || 'stbg2025';
+      password = seedArchivistePassword;
     } else {
-      const suffix = process.env.SEED_USER_PASSWORD_SUFFIX || '2025';
-      password = process.env.SEED_USER_PASSWORD || `${u.code.toLowerCase()}${suffix}`;
+      password = process.env.SEED_USER_PASSWORD || `${u.code.toUpperCase()}@user${seedUserPasswordSuffix}`;
     }
     const hash = await bcrypt.hash(password, 10);
     await new Promise((resolve, reject) => {
       db.query(
-        "INSERT INTO users (username, full_name, service_code, role, password) VALUES (?,?,?,?,?)",
+        "INSERT INTO users (username, full_name, service_code, role, password, must_change_password) VALUES (?,?,?,?,?,1)",
         [u.id, u.name, u.code, u.role, hash],
         (err) => err ? reject(err) : resolve()
       );
